@@ -1,9 +1,9 @@
 {
-  "name": "ave-blacklist",
-  "nameFull": "AVE Blacklist",
+  "name": "ave-script",
+  "nameFull": "AVE script",
   "version": "1.0.0",
   "description": "Block unwanted sellers and listings on Avito",
-  "main": "ave_blacklist.user.js",
+  "main": "ave_script.user.js",
   "type": "module",
   "scripts": {
     "build": "rollup -c",
@@ -11,12 +11,12 @@
   },
   "author": "xob0t",
   "license": "MIT",
-  "homepage": "https://github.com/user/ave-blacklist",
+  "homepage": "https://github.com/xob0t/ave-script",
   "bugs": {
-    "url": "https://github.com/user/ave-blacklist/issues"
+    "url": "https://github.com/xob0t/ave-script/issues"
   },
   "userScript": {
-    "namespace": "https://github.com/user/ave-blacklist",
+    "namespace": "https://github.com/xob0t/ave-script",
     "match": [
       "*://www.avito.ru/*",
       "*://m.avito.ru/*"
