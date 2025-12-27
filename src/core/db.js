@@ -122,3 +122,28 @@ export async function exportAll() {
   const offers = await getAllOffers();
   return { users, offers };
 }
+
+export async function importAll(data) {
+  const transaction = db.transaction([STORE_USERS, STORE_OFFERS], 'readwrite');
+  const usersStore = transaction.objectStore(STORE_USERS);
+  const offersStore = transaction.objectStore(STORE_OFFERS);
+
+  // Import users
+  if (data.users && Array.isArray(data.users)) {
+    for (const userId of data.users) {
+      usersStore.put({ id: userId });
+    }
+  }
+
+  // Import offers
+  if (data.offers && Array.isArray(data.offers)) {
+    for (const offerId of data.offers) {
+      offersStore.put({ id: offerId });
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+}

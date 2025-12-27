@@ -5,6 +5,7 @@ import { setBlacklistUsers, setBlacklistOffers, setCatalogData } from './core/st
 import { parseInitialData, getSellerId, getSellerIdFromUrl, decodeHtmlEntities } from './features/parser.js';
 import { processSearchPage } from './pages/search.js';
 import { processSellerPage } from './pages/seller.js';
+import { initPagination } from './features/pagination.js';
 
 const LOG_PREFIX = '[ave]';
 const OFFERS_ROOT_SELECTOR_VALUE = 'bx.catalog.container';
@@ -306,6 +307,8 @@ async function main() {
     console.log(`${LOG_PREFIX} page detected: seller`);
   } else {
     console.log(`${LOG_PREFIX} page detected: search`);
+    // Initialize auto-pagination for search pages
+    initPagination();
   }
 
   let initialData;

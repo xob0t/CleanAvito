@@ -1,6 +1,8 @@
 export let catalogData = [];
 export let blacklistUsers = new Set();
 export let blacklistOffers = new Set();
+export let isPaginationEnabled = true;
+export let isLoading = false;
 
 export function setCatalogData(data) {
   catalogData = data;
@@ -40,4 +42,12 @@ export function isUserBlacklisted(userId) {
 
 export function isOfferBlacklisted(offerId) {
   return blacklistOffers.has(offerId);
+}
+
+export function setPaginationEnabled(enabled) {
+  isPaginationEnabled = enabled;
+}
+
+export function setLoading(loading) {
+  isLoading = loading;
 }

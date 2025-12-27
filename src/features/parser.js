@@ -70,3 +70,20 @@ export function extractUserIdFromCatalogData(catalogData, offerId) {
     return null;
   }
 }
+
+// Extract userId directly from DOM element (fallback when catalog data is unavailable)
+export function extractUserIdFromElement(offerElement) {
+  const sellerLinkElement =
+    offerElement.querySelector('a[href*="/user/"]') ||
+    offerElement.querySelector('a[href*="/brands/"]');
+
+  if (!sellerLinkElement) return null;
+
+  const sellerHref = sellerLinkElement.href;
+  const userMatch = sellerHref.match(/\/user\/([^\/]+)/);
+  const brandMatch = sellerHref.match(/\/brands\/([^\/]+)/);
+
+  if (userMatch) return userMatch[1].split('?')[0];
+  if (brandMatch) return brandMatch[1].split('?')[0];
+  return null;
+}
