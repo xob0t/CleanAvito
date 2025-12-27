@@ -1,12 +1,12 @@
-import { catalogData, isUserBlacklisted, isOfferBlacklisted } from '../core/state.js';
-import { getOfferId, extractUserIdFromCatalogData } from '../features/parser.js';
-import { createHiddenContainer } from '../ui/hidden-container.js';
+import { catalogData, isUserBlacklisted, isOfferBlacklisted } from '../../core/state.js';
+import { getOfferId, extractUserIdFromCatalogData } from '../parser.js';
+import { createHiddenContainer, updateHiddenCounter } from '../../ui/hidden-container.js';
 import {
   insertBlockSellerButton,
   insertBlockOfferButton,
   insertUnblockSellerButton,
   insertUnblockOfferButton
-} from '../ui/buttons.js';
+} from '../../ui/buttons.js';
 
 const OFFERS_SELECTOR = '[data-marker="item"]';
 const LOG_PREFIX = '[ave]';
@@ -45,22 +45,33 @@ export function updateOfferState(offerElement, offerInfo) {
   if (!offerIsHidden && (userIsBlacklisted || offerIsBlacklisted)) {
     // Clone the original offer
     const offerElementClone = offerElement.cloneNode(true);
+    // Mark clone so we can distinguish it from original
+    offerElementClone.setAttribute('data-ave-clone', 'true');
     // Add buttons to clone BEFORE appending to hidden container
     addButtons(offerElementClone);
     // Hide the original offer
     offerElement.style.display = 'none';
+    offerElement.setAttribute('data-ave-hidden', 'true');
     // Put clone in hidden container
     hiddenContainer.appendChild(offerElementClone);
     console.log(`${LOG_PREFIX} offer ${offerInfo.offerId} hidden`);
     return; // Don't add buttons to original (it's hidden)
   } else if (offerIsHidden && !userIsBlacklisted && !offerIsBlacklisted) {
-    // Remove offer from hidden container
+    // Remove clone from hidden container
     offerElement.remove();
-    // Find the original hidden offer
-    offerElement = document.querySelector(`[data-item-id="${offerInfo.offerId}"]`);
-    if (offerElement) {
-      offerElement.style.display = 'block';
+    // Find the original hidden offer (marked with data-ave-hidden)
+    const originalOffer = document.querySelector(`[data-item-id="${offerInfo.offerId}"][data-ave-hidden="true"]`);
+    if (originalOffer) {
+      originalOffer.style.display = '';
+      originalOffer.removeAttribute('data-ave-hidden');
+      addButtons(originalOffer);
+      console.log(`${LOG_PREFIX} offer ${offerInfo.offerId} restored`);
     }
+    return;
+  } else if (offerIsHidden && (userIsBlacklisted || offerIsBlacklisted)) {
+    // Already hidden and still blacklisted - just update buttons
+    addButtons(offerElement);
+    return;
   }
 
   if (!offerElement) return;
@@ -74,21 +85,15 @@ export function processSearchPage() {
   const offerElements = document.querySelectorAll(OFFERS_SELECTOR);
   console.log(`${LOG_PREFIX} Processing ${offerElements.length} offers`);
 
-  // First, check hidden container for offers that should be restored
+  // First, check hidden container for clones - restore or update buttons
   if (hiddenContainer) {
-    const hiddenOffers = hiddenContainer.querySelectorAll(OFFERS_SELECTOR);
-    for (const hiddenOffer of hiddenOffers) {
-      const offerId = getOfferId(hiddenOffer);
+    const clonedOffers = hiddenContainer.querySelectorAll('[data-ave-clone="true"]');
+    for (const clonedOffer of clonedOffers) {
+      const offerId = getOfferId(clonedOffer);
       if (!offerId) continue;
 
       const userId = extractUserIdFromCatalogData(catalogData, offerId);
-      const userIsBlacklisted = userId && isUserBlacklisted(userId);
-      const offerIsBlacklisted = offerId && isOfferBlacklisted(offerId);
-
-      // If neither seller nor offer is blacklisted, restore this offer
-      if (!userIsBlacklisted && !offerIsBlacklisted) {
-        updateOfferState(hiddenOffer, { offerId, userId });
-      }
+      updateOfferState(clonedOffer, { offerId, userId });
     }
   }
 
@@ -99,6 +104,9 @@ export function processSearchPage() {
 
     // Skip offers in the hidden container (handled above)
     if (hiddenContainer && hiddenContainer.contains(offerElement)) continue;
+
+    // Skip offers that are already hidden (their clone is in the hidden container)
+    if (offerElement.getAttribute('data-ave-hidden') === 'true') continue;
 
     const userId = extractUserIdFromCatalogData(catalogData, offerId);
     const userIsBlacklisted = userId && isUserBlacklisted(userId);
@@ -113,4 +121,7 @@ export function processSearchPage() {
 
     updateOfferState(offerElement, { offerId, userId });
   }
+
+  // Update counter in hidden container header
+  updateHiddenCounter();
 }

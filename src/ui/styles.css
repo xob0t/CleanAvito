@@ -1,12 +1,13 @@
+/* Desktop: buttons hidden by default, show on hover */
 .button-container {
   display: none;
+  position: absolute;
+  z-index: 5;
+  right: 0;
 }
 
 [data-marker="item"]:hover .button-container {
-  position: absolute;
   display: flex;
-  z-index: 10000;
-  right: 0;
 }
 
 [class*='items-galleryItem']:hover .button-container {
@@ -15,6 +16,45 @@
 
 [class*='items-listItem']:hover .button-container {
   bottom: 0;
+}
+
+/* Mobile: always show buttons (no hover on touch devices) */
+@media (hover: none) and (pointer: coarse) {
+  .button-container {
+    display: flex !important;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .custom-button {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Hidden container grid - 2 cards per row */
+  .hidden-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px;
+  }
+
+  .hidden-container > * {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: none !important;
+    position: relative !important;
+  }
+
+  .hidden-container [data-marker="item"] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
 }
 
 .custom-button {
@@ -54,4 +94,9 @@
 
 .index-root-gtkvj {
   min-height: 0px !important;
+}
+
+/* Hide mobile ads */
+[data-marker^="items/ads"] {
+  display: none !important;
 }

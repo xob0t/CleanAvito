@@ -1,5 +1,5 @@
-import { isUserBlacklisted } from '../core/state.js';
-import { addUserToBlacklist, removeUserFromBlacklist } from '../core/blacklist.js';
+import { isUserBlacklisted } from '../../core/state.js';
+import { addUserToBlacklist, removeUserFromBlacklist } from '../../core/blacklist.js';
 
 const SELLER_PAGE_SIDEBAR_SELECTOR = '[class^="ExtendedProfileStickyContainer-"]';
 

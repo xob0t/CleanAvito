@@ -1,6 +1,8 @@
 import { exportAll, clearAll, importAll, getAllUsers, getAllOffers } from '../core/db.js';
 import { setBlacklistUsers, setBlacklistOffers, isPaginationEnabled, setPaginationEnabled } from '../core/state.js';
-import { checkPaginationVisibility } from '../features/pagination.js';
+import { checkPaginationVisibility } from '../desktop/pagination.js';
+
+const isMobile = window.location.hostname === 'm.avito.ru';
 
 const LOG_PREFIX = '[ave]';
 
@@ -88,11 +90,10 @@ async function showStats() {
 }
 
 function togglePagination() {
-  const newState = !isPaginationEnabled;
+  const newState = !isPaginationEnabled();
   setPaginationEnabled(newState);
-  console.log(`${LOG_PREFIX} Auto-pagination ${newState ? 'enabled' : 'disabled'}`);
   alert(`Авто-пагинация ${newState ? 'включена' : 'выключена'}`);
-  if (newState) {
+  if (newState && !isMobile) {
     checkPaginationVisibility();
   }
 }
@@ -114,7 +115,10 @@ async function clearDatabase() {
 }
 
 export function registerMenuCommands() {
-  GM_registerMenuCommand('Авто-пагинация вкл/выкл', togglePagination);
+  // Auto-pagination only available on desktop
+  if (!isMobile) {
+    GM_registerMenuCommand('Авто-пагинация вкл/выкл', togglePagination);
+  }
   GM_registerMenuCommand('Статистика', showStats);
   GM_registerMenuCommand('Экспорт базы данных', exportDatabase);
   GM_registerMenuCommand('Импорт из файла', importFromFile);

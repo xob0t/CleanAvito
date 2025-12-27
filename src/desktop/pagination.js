@@ -8,7 +8,7 @@ import {
   isOfferBlacklisted
 } from '../core/state.js';
 import { getOfferId, decodeHtmlEntities, extractUserIdFromCatalogData, extractUserIdFromElement } from './parser.js';
-import { updateOfferState } from '../pages/search.js';
+import { updateOfferState } from './pages/search.js';
 
 const LOG_PREFIX = '[ave]';
 let checkTimeout = null;
@@ -161,7 +161,7 @@ function processNewItems(newItems, targetContainer) {
 }
 
 async function fetchNextPage() {
-  if (!isPaginationEnabled || isLoading) {
+  if (!isPaginationEnabled() || isLoading()) {
     console.log(`${LOG_PREFIX} Fetch aborted - disabled or already loading`);
     return;
   }
@@ -284,7 +284,7 @@ async function fetchNextPage() {
 }
 
 export function checkPaginationVisibility() {
-  if (!isPaginationEnabled || isLoading) return;
+  if (!isPaginationEnabled() || isLoading()) return;
   clearTimeout(checkTimeout);
   checkTimeout = setTimeout(() => {
     if (isPaginatorVisible()) {
