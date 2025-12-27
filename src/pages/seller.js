@@ -4,11 +4,9 @@ import { addUserToBlacklist, removeUserFromBlacklist } from '../core/blacklist.j
 const SELLER_PAGE_SIDEBAR_SELECTOR = '[class^="ExtendedProfileStickyContainer-"]';
 
 function checkButton() {
-  const texts = ['Скрыть пользователя', 'Показать пользователя'];
-  const button = Array.from(document.querySelectorAll('button')).find(
-    (btn) => texts.includes(btn.textContent.trim())
-  );
-  return button !== undefined;
+  // Check if our buttons already exist
+  return document.querySelector('[data-marker="ave-block-seller"]') !== null ||
+         document.querySelector('[data-marker="ave-unblock-seller"]') !== null;
 }
 
 export function insertBlockedSellerUI(userId) {
@@ -17,27 +15,43 @@ export function insertBlockedSellerUI(userId) {
   const sidebar = document.querySelector(SELLER_PAGE_SIDEBAR_SELECTOR);
   if (!sidebar) return;
 
-  const unblockButtonHtml =
-    '<button type="button" class="sellerPageControlButton removeSellerFromBlacklist styles-module-root-EEwdX styles-module-root_size_m-Joz68 styles-module-root_preset_secondary-_ysdV styles-module-root_fullWidth-jnoCY"><span class="styles-module-wrapper-_6mED"><span class="styles-module-text-G2ghF styles-module-text_size_m-DUDcO">Показать пользователя</span></span></button>';
+  // Find the subscribe button container to copy its structure and classes
+  const subscribeContainer = sidebar.querySelector('[class*="SubscribeInfo-module-subscribe"]');
+  const existingButton = subscribeContainer?.querySelector('button');
 
-  const badgeHtml =
-    '<div class="ProfileBadge-root-bcR8G ProfileBadge-cloud-vOPD1 ProfileBadge-activatable-_4_K8 bad_badge" style="--badge-font-color:#000000;--badge-bgcolor:#f8cbcb;--badge-hover-bgcolor:#fd8181" data-marker="badge-102">❌ Пользователь в ЧС</div><div class="ProfileBadge-content-o2hDn"><div class="ProfileBadge-title-_Z4By" data-marker="badge-title-102"></div><div class="ProfileBadge-description-_lbMb" data-marker="badge-description-102"></div></div>';
+  // Create wrapper div matching the subscribe button container structure
+  const wrapperHtml = `
+    <div class="ave-seller-button-wrapper" style="margin-top: 8px;">
+      <div class="${subscribeContainer?.className || 'SubscribeInfo-module-subscribe-oQO3y'}">
+        <button type="button" data-marker="ave-unblock-seller" class="${existingButton?.className || 'styles-module-root-wdGw5 styles-module-root_size_m-jsWyU styles-module-root_preset_secondary-LeVEh styles-module-root_fullWidth-TCOfE'}">
+          <span class="${existingButton?.querySelector('span')?.className || 'styles-module-wrapper-z0dri'}">
+            <span class="${existingButton?.querySelector('span span')?.className || 'styles-module-text-ImmDp styles-module-text_size_m-WPf25'}">Показать пользователя</span>
+          </span>
+        </button>
+      </div>
+    </div>`;
 
-  const firstBadge = sidebar.querySelector('[class^="ProfileBadge-"]');
-  if (firstBadge) {
-    const badgeBar = firstBadge.parentElement;
-    badgeBar.insertAdjacentHTML('beforeend', badgeHtml);
+  // Insert badge after the name element
+  const nameElement = sidebar.querySelector('[class*="AvatarNameView-module-name"]');
+  if (nameElement && !sidebar.querySelector('.ave-blacklist-badge')) {
+    const badgeHtml = '<div class="ave-blacklist-badge" style="margin-top: 8px; padding: 4px 8px; background-color: #f8cbcb; border-radius: 4px; font-size: 14px; color: #000;">❌ Пользователь в ЧС</div>';
+    nameElement.insertAdjacentHTML('afterend', badgeHtml);
   }
 
-  sidebar.insertAdjacentHTML('beforeend', unblockButtonHtml);
+  // Insert button after subscribe button
+  if (subscribeContainer) {
+    subscribeContainer.insertAdjacentHTML('afterend', wrapperHtml);
+  } else {
+    sidebar.insertAdjacentHTML('beforeend', wrapperHtml);
+  }
 
-  const actionButton = sidebar.querySelector('.removeSellerFromBlacklist');
+  const actionButton = sidebar.querySelector('[data-marker="ave-unblock-seller"]');
   if (actionButton) {
     actionButton.addEventListener('click', async () => {
       await removeUserFromBlacklist(userId);
-      const badge = sidebar.querySelector('.bad_badge');
+      const badge = sidebar.querySelector('.ave-blacklist-badge');
       if (badge) badge.remove();
-      actionButton.remove();
+      actionButton.closest('.ave-seller-button-wrapper')?.remove();
       insertSellerUI(userId);
     });
   }
@@ -49,16 +63,34 @@ export function insertSellerUI(userId) {
   const sidebar = document.querySelector(SELLER_PAGE_SIDEBAR_SELECTOR);
   if (!sidebar) return;
 
-  const blockButtonHtml =
-    '<button type="button" class="sellerPageControlButton addSellerToBlacklist styles-module-root-EEwdX styles-module-root_size_m-Joz68 styles-module-root_preset_secondary-_ysdV styles-module-root_fullWidth-jnoCY"><span class="styles-module-wrapper-_6mED"><span class="styles-module-text-G2ghF styles-module-text_size_m-DUDcO">Скрыть пользователя</span></span></button>';
+  // Find the subscribe button container to copy its structure and classes
+  const subscribeContainer = sidebar.querySelector('[class*="SubscribeInfo-module-subscribe"]');
+  const existingButton = subscribeContainer?.querySelector('button');
 
-  sidebar.insertAdjacentHTML('beforeend', blockButtonHtml);
+  // Create wrapper div matching the subscribe button container structure
+  const wrapperHtml = `
+    <div class="ave-seller-button-wrapper" style="margin-top: 8px;">
+      <div class="${subscribeContainer?.className || 'SubscribeInfo-module-subscribe-oQO3y'}">
+        <button type="button" data-marker="ave-block-seller" class="${existingButton?.className || 'styles-module-root-wdGw5 styles-module-root_size_m-jsWyU styles-module-root_preset_secondary-LeVEh styles-module-root_fullWidth-TCOfE'}">
+          <span class="${existingButton?.querySelector('span')?.className || 'styles-module-wrapper-z0dri'}">
+            <span class="${existingButton?.querySelector('span span')?.className || 'styles-module-text-ImmDp styles-module-text_size_m-WPf25'}">Скрыть пользователя</span>
+          </span>
+        </button>
+      </div>
+    </div>`;
 
-  const actionButton = sidebar.querySelector('.addSellerToBlacklist');
+  // Insert button after subscribe button
+  if (subscribeContainer) {
+    subscribeContainer.insertAdjacentHTML('afterend', wrapperHtml);
+  } else {
+    sidebar.insertAdjacentHTML('beforeend', wrapperHtml);
+  }
+
+  const actionButton = sidebar.querySelector('[data-marker="ave-block-seller"]');
   if (actionButton) {
     actionButton.addEventListener('click', async () => {
       await addUserToBlacklist(userId);
-      actionButton.remove();
+      actionButton.closest('.ave-seller-button-wrapper')?.remove();
       insertBlockedSellerUI(userId);
     });
   }

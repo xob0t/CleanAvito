@@ -35,8 +35,23 @@ export function getCatalogDataFromInit(initialData) {
 }
 
 export function getSellerId(initialData) {
-  return initialData.data.ssrData.initData.result.value.data.customLink ||
-         initialData.data.ssrData.initData.result.value.data.profileUserHash;
+  try {
+    return initialData.data.ssrData.initData.result.value.data.customLink ||
+           initialData.data.ssrData.initData.result.value.data.profileUserHash;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Extract seller ID directly from URL (more reliable than __initialData__)
+export function getSellerIdFromUrl() {
+  const pathname = window.location.pathname;
+  const userMatch = pathname.match(/\/user\/([^\/]+)/);
+  const brandMatch = pathname.match(/\/brands\/([^\/]+)/);
+
+  if (userMatch) return userMatch[1].split('?')[0];
+  if (brandMatch) return brandMatch[1].split('?')[0];
+  return null;
 }
 
 export function getOfferId(offerElement) {

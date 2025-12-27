@@ -2,7 +2,7 @@ import styles from './ui/styles.css';
 import { registerMenuCommands } from './ui/menu.js';
 import { initDB, getAllUsers, getAllOffers } from './core/db.js';
 import { setBlacklistUsers, setBlacklistOffers, setCatalogData } from './core/state.js';
-import { parseInitialData, getSellerId, decodeHtmlEntities } from './features/parser.js';
+import { parseInitialData, getSellerId, getSellerIdFromUrl, decodeHtmlEntities } from './features/parser.js';
 import { processSearchPage } from './pages/search.js';
 import { processSellerPage } from './pages/seller.js';
 
@@ -312,11 +312,25 @@ async function main() {
 
   // Check for existing data on page load
   if (isUserPage) {
-    initialData = findExistingInitialData();
-    if (initialData) {
-      console.log(`${LOG_PREFIX} Found existing initialData on page load`);
-      const userId = getSellerId(initialData);
-      processSellerPage(userId);
+    // Primary method: extract seller ID from URL
+    let userId = getSellerIdFromUrl();
+    if (userId) {
+      console.log(`${LOG_PREFIX} Seller userId from URL: ${userId}`);
+      // Delay processing to wait for sidebar DOM to be ready
+      setTimeout(() => processSellerPage(userId), 500);
+    } else {
+      // Fallback: try to get from initialData
+      initialData = findExistingInitialData();
+      if (initialData) {
+        console.log(`${LOG_PREFIX} Found existing initialData on page load`);
+        userId = getSellerId(initialData);
+        console.log(`${LOG_PREFIX} Seller userId from initialData: ${userId}`);
+        if (userId) {
+          setTimeout(() => processSellerPage(userId), 500);
+        }
+      } else {
+        console.log(`${LOG_PREFIX} No userId found, waiting for MutationObserver`);
+      }
     }
   } else {
     // Try to find catalog data
@@ -340,31 +354,39 @@ async function main() {
         mutation.addedNodes.forEach(async function (node) {
           if (isUserPage) {
             // Seller page
-            if (
-              node?.classList?.toString().includes('styles-module-theme-_4Zlk styles-module-theme-kvanA') ||
-              node?.classList
-                ?.toString()
-                .includes(
-                  'styles-module-flex-MLjHp styles-module-flex-col-_wNyN styles-module-child-width-fit-oDxVB styles-module-child-height-fit-LmDUR'
-                ) ||
-              (node?.classList
-                ?.toString()
-                .includes(
-                  'styles-module-flex-MLjHp styles-module-flex-col-_wNyN styles-module-child-width-full-bPGg_ styles-module-child-height-fit-LmDUR styles-module-align-start-rasRB styles-module-max-w-full-hU4Na'
-                ) &&
-                node.querySelector('[class^="ProfileBadge-root-"]'))
-            ) {
-              console.log(`${LOG_PREFIX} seller page updated`);
-              if (!initialData) return;
-              const userId = getSellerId(initialData);
-              processSellerPage(userId);
+            if (node instanceof Element) {
+              // Check if sidebar container appeared
+              const isSidebar = node.matches?.('[class^="ExtendedProfileStickyContainer-"]') ||
+                                node.querySelector?.('[class^="ExtendedProfileStickyContainer-"]');
+              // Check for profile badge appearing
+              const hasBadge = node.matches?.('[class^="ProfileBadge-root-"]') ||
+                               node.querySelector?.('[class^="ProfileBadge-root-"]');
+              // Check for subscribe/contact buttons
+              const hasButtons = node.querySelector?.('[class*="SubscribeInfo-module-subscribe"]') ||
+                                 node.querySelector?.('[class*="ContactBar-module-controls"]');
+
+              if (isSidebar || hasBadge || hasButtons) {
+                console.log(`${LOG_PREFIX} seller page sidebar/badge/buttons detected`);
+                // Use URL as primary source
+                const userId = getSellerIdFromUrl();
+                if (userId) {
+                  processSellerPage(userId);
+                }
+              }
             }
             if (node?.nodeName === 'SCRIPT' && node?.textContent?.includes('__initialData__')) {
               const initialDataContent = node.textContent;
               initialData = parseInitialData(initialDataContent);
-              console.log(`${LOG_PREFIX} initialData found`, initialData);
-              const userId = getSellerId(initialData);
-              processSellerPage(userId);
+              console.log(`${LOG_PREFIX} initialData found`);
+              // Use URL as primary source, initialData as fallback
+              let userId = getSellerIdFromUrl();
+              if (!userId) {
+                userId = getSellerId(initialData);
+              }
+              console.log(`${LOG_PREFIX} Seller userId: ${userId}`);
+              if (userId) {
+                processSellerPage(userId);
+              }
             }
           } else {
             // Search page
