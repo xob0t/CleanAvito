@@ -22,7 +22,6 @@ function findOfferElements() {
   for (const selector of MOBILE_OFFERS_SELECTORS) {
     const elements = document.querySelectorAll(selector);
     if (elements.length > 0) {
-      console.log(`${LOG_PREFIX} Found ${elements.length} offers with selector: ${selector}`);
       return Array.from(elements);
     }
   }
@@ -136,7 +135,15 @@ export function updateMobileOfferState(offerElement, offerInfo) {
     // Remove clone from hidden container
     offerElement.remove();
     // Find the original hidden offer (marked with data-ave-hidden)
-    const originalOffer = document.querySelector(`[data-item-id="${offerInfo.offerId}"][data-ave-hidden="true"]`);
+    // Need to search through all hidden offers since they might not have data-item-id attribute
+    const hiddenOffers = document.querySelectorAll('[data-ave-hidden="true"]');
+    let originalOffer = null;
+    for (const hidden of hiddenOffers) {
+      if (getOfferIdFromElement(hidden) === offerInfo.offerId) {
+        originalOffer = hidden;
+        break;
+      }
+    }
     if (originalOffer) {
       originalOffer.style.display = '';
       originalOffer.removeAttribute('data-ave-hidden');
@@ -163,13 +170,7 @@ export async function processMobileSearchPage() {
   // Always try to fetch initialData first - it has correct items for this page
   await fetchMobileCatalogIfNeeded();
 
-  console.log(`${LOG_PREFIX} Processing ${offerElements.length} mobile offers (catalog: ${mobileCatalogData.length} items)`);
-
-  // Debug: log first 5 catalog item IDs vs first 5 DOM offer IDs
-  const catalogIds = mobileCatalogData.slice(0, 5).map(item => item.value?.id);
-  const domIds = offerElements.slice(0, 5).map(el => getOfferIdFromElement(el));
-  console.log(`${LOG_PREFIX} Catalog IDs:`, catalogIds);
-  console.log(`${LOG_PREFIX} DOM IDs:`, domIds);
+  console.log(`${LOG_PREFIX} Processing ${offerElements.length} offers (catalog: ${mobileCatalogData.length} items)`);
 
   // First, check hidden container for clones - restore or update buttons
   if (hiddenContainer) {
@@ -201,23 +202,21 @@ export async function processMobileSearchPage() {
 
     const userId = extractUserIdFromMobileData(mobileCatalogData, offerId);
 
-    // Debug: log first few extractions
-    if (processed < 3) {
-      console.log(`${LOG_PREFIX} Offer ${offerId} -> userId: ${userId}`);
-    }
-
     // Check if this element already has buttons
     const hasButtons = offerElement.querySelector('.button-container');
 
     // Skip if already has buttons (unless blacklisted which needs re-processing)
     const userIsBlacklisted = userId && isUserBlacklisted(userId);
     const offerIsBlacklisted = offerId && isOfferBlacklisted(offerId);
+
     if (hasButtons && !userIsBlacklisted && !offerIsBlacklisted) continue;
 
     updateMobileOfferState(offerElement, { offerId, userId });
     processed++;
   }
-  console.log(`${LOG_PREFIX} Processed ${processed} offers, skipped ${skipped} without ID`);
+  if (processed > 0) {
+    console.log(`${LOG_PREFIX} Processed ${processed} offers`);
+  }
 
   // Update counter in hidden container header
   updateHiddenCounter();

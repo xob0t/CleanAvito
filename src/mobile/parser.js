@@ -2,10 +2,15 @@ import { setMobileCatalogData } from '../core/state.js';
 
 const LOG_PREFIX = '[ave]';
 
+let initialDataParsed = false;
+
 // Extract initial catalog data from the page's embedded initialData script
 // This should be called FIRST as it contains the correct items for the current page
 export async function fetchMobileCatalogIfNeeded() {
-  // Always try to parse initialData - it has the correct items for this page
+  // Only parse initialData once - don't overwrite appended API data
+  if (initialDataParsed) {
+    return;
+  }
 
   // Look for the initialData script tag (URL-encoded JSON)
   const initialDataScript = document.getElementById('initialData');
@@ -15,20 +20,14 @@ export async function fetchMobileCatalogIfNeeded() {
       const decodedData = decodeURIComponent(encodedData);
       const data = JSON.parse(decodedData);
 
-      // Log raw data structure for debugging
-      console.log(`${LOG_PREFIX} initialData keys:`, Object.keys(data));
-      console.log(`${LOG_PREFIX} search keys:`, data?.search ? Object.keys(data.search) : 'no search');
-
       // Items are in search.allItems as an object with item IDs as keys
       const allItems = data?.search?.allItems;
       if (allItems && typeof allItems === 'object') {
         const items = Object.values(allItems).filter(item => item.type === 'item');
         if (items.length > 0) {
           console.log(`${LOG_PREFIX} Found ${items.length} items in initialData`);
-          // Log first item structure
-          // console.log(`${LOG_PREFIX} First item structure:`, JSON.stringify(items[0], null, 2));
-          // Use set (not append) - initialData has the correct items for this page
           setMobileCatalogData(items);
+          initialDataParsed = true;
           return;
         }
       }

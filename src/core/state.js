@@ -31,6 +31,9 @@ export function appendMobileCatalogData(items) {
   // Deduplicate by item ID when appending
   const existingIds = new Set(mobileCatalogData.map(item => item.value?.id));
   const newItems = items.filter(item => !existingIds.has(item.value?.id));
+  if (newItems.length > 0) {
+    console.log(`[ave] Added ${newItems.length} new items to catalog (total: ${mobileCatalogData.length + newItems.length})`);
+  }
   mobileCatalogData = [...mobileCatalogData, ...newItems];
 }
 

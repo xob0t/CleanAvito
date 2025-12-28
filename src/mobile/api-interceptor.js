@@ -17,7 +17,9 @@ function processApiResponse(url, responseText) {
       if (data.result?.items && Array.isArray(data.result.items)) {
         // Filter out banners and other non-item types, only keep actual items
         const items = data.result.items.filter(item => item.type === 'item');
-        console.log(`${LOG_PREFIX} Intercepted ${items.length} items from API (filtered from ${data.result.items.length})`);
+        if (items.length > 0) {
+          console.log(`${LOG_PREFIX} Intercepted ${items.length} items from API`);
+        }
         appendMobileCatalogData(items);
 
         // Trigger page processing if callback is set
