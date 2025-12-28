@@ -1,6 +1,7 @@
 import { exportAll, clearAll, importAll, getAllUsers, getAllOffers } from '../core/db.js';
 import { setBlacklistUsers, setBlacklistOffers, isPaginationEnabled, setPaginationEnabled } from '../core/state.js';
 import { checkPaginationVisibility } from '../desktop/pagination.js';
+import { exportToPastebin, importFromPastebin } from '../core/sync.js';
 
 const isMobile = window.location.hostname === 'm.avito.ru';
 
@@ -114,6 +115,48 @@ async function clearDatabase() {
   }
 }
 
+async function exportToPastebinUI() {
+  try {
+    const url = await exportToPastebin();
+
+    // Copy URL to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      alert(`База экспортирована в Pastebin!\n\nURL скопирован в буфер обмена:\n${url}\n\nИспользуйте этот URL для импорта на другом устройстве.`);
+    } catch (clipboardError) {
+      // Fallback if clipboard API fails
+      prompt('База экспортирована! Скопируйте этот URL:', url);
+    }
+
+    console.log(`${LOG_PREFIX} Pastebin export successful: ${url}`);
+  } catch (error) {
+    console.error(`${LOG_PREFIX} Error exporting to pastebin:`, error);
+    alert('Ошибка экспорта в Pastebin: ' + error.message);
+  }
+}
+
+async function importFromPastebinUI() {
+  const url = prompt('Введите URL из Pastebin:\n(например: https://dpaste.com/XXXXX)');
+
+  if (!url) {
+    return; // User cancelled
+  }
+
+  if (!url.trim()) {
+    alert('URL не может быть пустым');
+    return;
+  }
+
+  try {
+    const stats = await importFromPastebin(url.trim());
+    alert(`Импортировано из Pastebin:\n\n${stats.users} пользователей\n${stats.offers} объявлений`);
+    location.reload();
+  } catch (error) {
+    console.error(`${LOG_PREFIX} Error importing from pastebin:`, error);
+    alert(error.message);
+  }
+}
+
 export function registerMenuCommands() {
   // Auto-pagination only available on desktop
   if (!isMobile) {
@@ -122,5 +165,7 @@ export function registerMenuCommands() {
   GM_registerMenuCommand('Статистика', showStats);
   GM_registerMenuCommand('Экспорт базы данных', exportDatabase);
   GM_registerMenuCommand('Импорт из файла', importFromFile);
+  GM_registerMenuCommand('📤 Экспорт в Pastebin', exportToPastebinUI);
+  GM_registerMenuCommand('📥 Импорт из Pastebin', importFromPastebinUI);
   GM_registerMenuCommand('Очистить базу данных', clearDatabase);
 }
