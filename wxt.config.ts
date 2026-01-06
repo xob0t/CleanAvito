@@ -23,5 +23,11 @@ export default defineConfig({
       default_title: 'AVE Script',
       default_popup: 'popup/index.html',
     },
+    web_accessible_resources: [
+      {
+        resources: ['/injected.js'],
+        matches: ['*://m.avito.ru/*'],
+      },
+    ],
   },
 });

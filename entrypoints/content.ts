@@ -3,6 +3,7 @@
  * Runs on avito.ru pages
  */
 
+import { injectScript } from 'wxt/client';
 import { initDB, registerChangeCallback, registerAutoSyncCallback, runMigration, getAllUsers, getAllOffers, exportAll, importAll, clearAll } from '@/utils/db';
 import { initState, setBlacklistUsers, setBlacklistOffers, getEnabledSubscriptions, getPublishedListId, getPublishedEditCode, markLocalChange, setPaginationEnabled, removeSubscription, toggleSubscription } from '@/utils/state';
 import { initDesktop } from '@/utils/desktop/index';
@@ -24,8 +25,11 @@ export default defineContentScript({
   async main() {
     const isMobile = window.location.hostname === 'm.avito.ru';
 
-    // Install fetch interceptor IMMEDIATELY for mobile (before any API calls)
+    // Inject main world script IMMEDIATELY for mobile (before any API calls)
+    // This intercepts fetch/XHR in the page context
     if (isMobile) {
+      injectScript('/injected.js');
+      // Also install listener for data from main world
       installFetchInterceptor();
     }
 
