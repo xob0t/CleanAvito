@@ -163,7 +163,7 @@ export async function getAllUsers(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const store = getStore(STORE_USERS);
     const request = store.getAll();
-    request.onsuccess = () => resolve((request.result as DBEntry[]).map(item => item.id));
+    request.onsuccess = () => resolve((request.result as DBEntry[]).map((item) => item.id));
     request.onerror = () => reject(request.error);
   });
 }
@@ -172,10 +172,13 @@ export async function getAllUsersWithTimestamps(): Promise<DBEntry[]> {
   return new Promise((resolve, reject) => {
     const store = getStore(STORE_USERS);
     const request = store.getAll();
-    request.onsuccess = () => resolve((request.result as DBEntry[]).map(item => ({
-      id: item.id,
-      addedAt: item.addedAt || Date.now()
-    })));
+    request.onsuccess = () =>
+      resolve(
+        (request.result as DBEntry[]).map((item) => ({
+          id: item.id,
+          addedAt: item.addedAt || Date.now(),
+        })),
+      );
     request.onerror = () => reject(request.error);
   });
 }
@@ -220,7 +223,7 @@ export async function getAllOffers(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const store = getStore(STORE_OFFERS);
     const request = store.getAll();
-    request.onsuccess = () => resolve((request.result as DBEntry[]).map(item => item.id));
+    request.onsuccess = () => resolve((request.result as DBEntry[]).map((item) => item.id));
     request.onerror = () => reject(request.error);
   });
 }
@@ -229,10 +232,13 @@ export async function getAllOffersWithTimestamps(): Promise<DBEntry[]> {
   return new Promise((resolve, reject) => {
     const store = getStore(STORE_OFFERS);
     const request = store.getAll();
-    request.onsuccess = () => resolve((request.result as DBEntry[]).map(item => ({
-      id: item.id,
-      addedAt: item.addedAt || Date.now()
-    })));
+    request.onsuccess = () =>
+      resolve(
+        (request.result as DBEntry[]).map((item) => ({
+          id: item.id,
+          addedAt: item.addedAt || Date.now(),
+        })),
+      );
     request.onerror = () => reject(request.error);
   });
 }

@@ -15,7 +15,12 @@
     "zip:firefox": "wxt zip -b firefox",
     "zip:all": "wxt zip && wxt zip -b firefox",
     "postinstall": "wxt prepare",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check --write ."
   },
   "author": "xob0t",
   "license": "MIT",
@@ -24,6 +29,7 @@
     "url": "https://github.com/xob0t/ave-script/issues"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
     "wxt": "^0.19.17"

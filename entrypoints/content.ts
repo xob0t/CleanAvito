@@ -4,16 +4,43 @@
  */
 
 import { injectScript } from 'wxt/client';
-import { initDB, registerChangeCallback, registerAutoSyncCallback, runMigration, getAllUsers, getAllOffers, exportAll, importAll, clearAll } from '@/utils/db';
-import { initState, setBlacklistUsers, setBlacklistOffers, getEnabledSubscriptions, getPublishedListId, getPublishedEditCode, markLocalChange, setPaginationEnabled, removeSubscription, toggleSubscription } from '@/utils/state';
-import { initDesktop } from '@/utils/desktop/index';
-import { initMobile, installFetchInterceptor } from '@/utils/mobile/index';
-import { syncSubscriptions, bidirectionalSync, publishToSupabase, subscribeToList, importEditableList } from '@/utils/sync';
-import { startPeriodicSync, forceSyncNow } from '@/utils/periodic-sync';
-import { triggerAutoSync } from '@/utils/auto-sync';
-import { fetchList } from '@/utils/supabase';
-import { checkPaginationVisibility } from '@/utils/desktop/pagination';
 import styles from '@/assets/styles.css?inline';
+import { triggerAutoSync } from '@/utils/auto-sync';
+import {
+  clearAll,
+  exportAll,
+  getAllOffers,
+  getAllUsers,
+  importAll,
+  initDB,
+  registerAutoSyncCallback,
+  registerChangeCallback,
+  runMigration,
+} from '@/utils/db';
+import { initDesktop } from '@/utils/desktop/index';
+import { checkPaginationVisibility } from '@/utils/desktop/pagination';
+import { initMobile, installFetchInterceptor } from '@/utils/mobile/index';
+import { forceSyncNow, startPeriodicSync } from '@/utils/periodic-sync';
+import {
+  getEnabledSubscriptions,
+  getPublishedEditCode,
+  getPublishedListId,
+  initState,
+  markLocalChange,
+  removeSubscription,
+  setBlacklistOffers,
+  setBlacklistUsers,
+  setPaginationEnabled,
+  toggleSubscription,
+} from '@/utils/state';
+import { fetchList } from '@/utils/supabase';
+import {
+  bidirectionalSync,
+  importEditableList,
+  publishToSupabase,
+  subscribeToList,
+  syncSubscriptions,
+} from '@/utils/sync';
 
 const LOG_PREFIX = '[ave]';
 
@@ -33,7 +60,9 @@ export default defineContentScript({
       installFetchInterceptor();
     }
 
-    console.log(`${LOG_PREFIX} Script loaded (readyState: ${document.readyState}, platform: ${isMobile ? 'mobile' : 'desktop'})`);
+    console.log(
+      `${LOG_PREFIX} Script loaded (readyState: ${document.readyState}, platform: ${isMobile ? 'mobile' : 'desktop'})`,
+    );
 
     // Inject styles
     const styleEl = document.createElement('style');
@@ -68,7 +97,9 @@ export default defineContentScript({
           try {
             // Bidirectional sync for published list
             const syncResult = await bidirectionalSync(publishedId, publishedEditCode);
-            console.log(`${LOG_PREFIX} Bidirectional sync complete: ${syncResult.users} users, ${syncResult.offers} offers`);
+            console.log(
+              `${LOG_PREFIX} Bidirectional sync complete: ${syncResult.users} users, ${syncResult.offers} offers`,
+            );
 
             // Start periodic sync
             startPeriodicSync();
@@ -139,9 +170,9 @@ export default defineContentScript({
       console.log(`${LOG_PREFIX} Refresh page event received`);
       // Re-process the page after sync
       if (isMobile) {
-        import('@/utils/mobile/search').then(m => m.processMobileSearchPage());
+        import('@/utils/mobile/search').then((m) => m.processMobileSearchPage());
       } else {
-        import('@/utils/desktop/search').then(m => m.processSearchPage());
+        import('@/utils/desktop/search').then((m) => m.processSearchPage());
       }
     });
 
@@ -303,5 +334,5 @@ export default defineContentScript({
       handleAsync().then(sendResponse);
       return true; // Keep the message channel open for async response
     });
-  }
+  },
 });

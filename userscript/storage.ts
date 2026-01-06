@@ -15,7 +15,7 @@ export interface Subscription {
 class GMStorageItem<T> {
   constructor(
     private key: string,
-    private defaultValue: T
+    private defaultValue: T,
   ) {}
 
   getValue(): T {

@@ -3,8 +3,8 @@
  * Syncs changes to remote when local DB is modified
  */
 
+import { getPublishedEditCode, getPublishedListId } from './state';
 import { bidirectionalSync } from './sync';
-import { getPublishedListId, getPublishedEditCode } from './state';
 import { acquireSyncLock, releaseSyncLock } from './sync-lock';
 
 const LOG_PREFIX = '[ave-auto-sync]';

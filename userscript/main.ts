@@ -3,30 +3,39 @@
  * Blocks unwanted sellers and listings on Avito
  */
 
-import { initDB, registerChangeCallback, registerAutoSyncCallback, runMigration, getAllUsers, getAllOffers } from '../utils/db';
+import styles from '../assets/styles.css?inline';
+import { triggerAutoSync } from '../utils/auto-sync';
 import {
-  initState,
-  setBlacklistUsers,
-  setBlacklistOffers,
-  getEnabledSubscriptions,
-  getPublishedListId,
-  getPublishedEditCode,
-  markLocalChange,
-} from './state';
+  getAllOffers,
+  getAllUsers,
+  initDB,
+  registerAutoSyncCallback,
+  registerChangeCallback,
+  runMigration,
+} from '../utils/db';
 import { initDesktop } from '../utils/desktop/index';
 import { initMobile } from '../utils/mobile/index';
-import { syncSubscriptions, bidirectionalSync } from '../utils/sync';
 import { startPeriodicSync } from '../utils/periodic-sync';
-import { triggerAutoSync } from '../utils/auto-sync';
+import { bidirectionalSync, syncSubscriptions } from '../utils/sync';
 import { registerMenuCommands } from './menu';
-import styles from '../assets/styles.css?inline';
+import {
+  getEnabledSubscriptions,
+  getPublishedEditCode,
+  getPublishedListId,
+  initState,
+  markLocalChange,
+  setBlacklistOffers,
+  setBlacklistUsers,
+} from './state';
 
 const LOG_PREFIX = '[ave]';
 
 async function main(): Promise<void> {
   const isMobile = window.location.hostname === 'm.avito.ru';
 
-  console.log(`${LOG_PREFIX} Script loaded (readyState: ${document.readyState}, platform: ${isMobile ? 'mobile' : 'desktop'})`);
+  console.log(
+    `${LOG_PREFIX} Script loaded (readyState: ${document.readyState}, platform: ${isMobile ? 'mobile' : 'desktop'})`,
+  );
 
   // Inject styles
   const styleEl = document.createElement('style');

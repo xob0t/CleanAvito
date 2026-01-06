@@ -4,12 +4,12 @@
 
 // Desktop and mobile selectors for the offers container
 const OFFERS_ROOT_SELECTORS = [
-  '[elementtiming="bx.catalog.container"]',  // Desktop
-  '[class*="items-items"]',                   // Desktop fallback
-  '[data-marker="catalog-serp"]',             // Mobile
-  '[class*="serp-"]',                         // Mobile fallback
-  'main',                                     // Generic fallback
-  'body'                                      // Last resort
+  '[elementtiming="bx.catalog.container"]', // Desktop
+  '[class*="items-items"]', // Desktop fallback
+  '[data-marker="catalog-serp"]', // Mobile
+  '[class*="serp-"]', // Mobile fallback
+  'main', // Generic fallback
+  'body', // Last resort
 ];
 
 const isMobile = typeof window !== 'undefined' && window.location.hostname === 'm.avito.ru';
@@ -82,7 +82,7 @@ export function updateHiddenCounter(): void {
   if (container && counter) {
     // Count only direct children with data-ave-clone attribute
     const count = Array.from(container.children).filter(
-      child => child.getAttribute('data-ave-clone') === 'true'
+      (child) => child.getAttribute('data-ave-clone') === 'true',
     ).length;
     counter.textContent = `(${count})`;
   }

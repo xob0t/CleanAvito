@@ -32,7 +32,7 @@ async function sendToContentScript(action: string, data?: unknown): Promise<unkn
 async function loadStats(): Promise<void> {
   try {
     // Get stats from content script via message
-    const result = await sendToContentScript('getStats') as { users: number; offers: number } | null;
+    const result = (await sendToContentScript('getStats')) as { users: number; offers: number } | null;
 
     if (result) {
       document.getElementById('stat-users')!.textContent = String(result.users);
@@ -82,8 +82,8 @@ function setupMenuHandlers(): void {
     if (existingId) {
       alert(
         'Синхронизация уже включена!\n\n' +
-        'Для подключения другого устройства используйте:\n' +
-        '"Получить данные синхронизации"'
+          'Для подключения другого устройства используйте:\n' +
+          '"Получить данные синхронизации"',
       );
       return;
     }
@@ -94,16 +94,16 @@ function setupMenuHandlers(): void {
     const description = prompt('Описание (необязательно):') || '';
 
     try {
-      const result = await sendToContentScript('publishToSupabase', { name, description }) as { id: string };
+      const result = (await sendToContentScript('publishToSupabase', { name, description })) as { id: string };
       alert(
         `✅ Синхронизация включена!\n\n` +
-        `Изменения будут автоматически синхронизироваться между устройствами.\n\n` +
-        `Для подключения другого устройства используйте:\n` +
-        `"Получить данные синхронизации"`
+          `Изменения будут автоматически синхронизироваться между устройствами.\n\n` +
+          `Для подключения другого устройства используйте:\n` +
+          `"Получить данные синхронизации"`,
       );
       console.log('Published to Supabase:', result.id);
     } catch (error) {
-      alert('Ошибка публикации: ' + (error as Error).message);
+      alert(`Ошибка публикации: ${(error as Error).message}`);
     }
   });
 
@@ -123,10 +123,10 @@ function setupMenuHandlers(): void {
       await navigator.clipboard.writeText(credentialsJSON);
       alert(
         `✅ Данные для синхронизации скопированы!\n\n` +
-        `Для подключения другого устройства:\n` +
-        `1. Откройте меню на другом устройстве\n` +
-        `2. Выберите "Подключить синхронизацию"\n` +
-        `3. Вставьте эти данные из буфера обмена`
+          `Для подключения другого устройства:\n` +
+          `1. Откройте меню на другом устройстве\n` +
+          `2. Выберите "Подключить синхронизацию"\n` +
+          `3. Вставьте эти данные из буфера обмена`,
       );
     } catch {
       prompt('Скопируйте данные для синхронизации:', credentialsJSON);
@@ -137,10 +137,10 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-connect-sync')!.addEventListener('click', async () => {
     const input = prompt(
       'Подключение синхронизации\n\n' +
-      'Вставьте данные из буфера обмена:\n' +
-      '{"listId":"...","editCode":"..."}\n\n' +
-      'Получить данные можно на другом устройстве:\n' +
-      '"Получить данные синхронизации"'
+        'Вставьте данные из буфера обмена:\n' +
+        '{"listId":"...","editCode":"..."}\n\n' +
+        'Получить данные можно на другом устройстве:\n' +
+        '"Получить данные синхронизации"',
     );
 
     if (!input || !input.trim()) return;
@@ -160,7 +160,7 @@ function setupMenuHandlers(): void {
     }
 
     try {
-      const result = await sendToContentScript('importEditableList', { listId, editCode }) as {
+      const result = (await sendToContentScript('importEditableList', { listId, editCode })) as {
         name: string;
         users: number;
         offers: number;
@@ -168,10 +168,10 @@ function setupMenuHandlers(): void {
 
       alert(
         `✅ Синхронизация подключена!\n\n` +
-        `📋 Список: ${result.name}\n` +
-        `👥 Пользователей: ${result.users}\n` +
-        `📦 Объявлений: ${result.offers}\n\n` +
-        `Изменения автоматически синхронизируются между устройствами.`
+          `📋 Список: ${result.name}\n` +
+          `👥 Пользователей: ${result.users}\n` +
+          `📦 Объявлений: ${result.offers}\n\n` +
+          `Изменения автоматически синхронизируются между устройствами.`,
       );
 
       // Reload the active tab
@@ -180,7 +180,7 @@ function setupMenuHandlers(): void {
         browser.tabs.reload(tab.id);
       }
     } catch (error) {
-      alert('Ошибка подключения: ' + (error as Error).message);
+      alert(`Ошибка подключения: ${(error as Error).message}`);
     }
   });
 
@@ -188,18 +188,14 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-force-sync')!.addEventListener('click', async () => {
     try {
       alert('Синхронизация начата...');
-      const result = await sendToContentScript('forceSync') as { users: number; offers: number };
+      const result = (await sendToContentScript('forceSync')) as { users: number; offers: number };
 
-      alert(
-        `✅ Синхронизация завершена!\n\n` +
-        `👥 Пользователей: ${result.users}\n` +
-        `📦 Объявлений: ${result.offers}`
-      );
+      alert(`✅ Синхронизация завершена!\n\n👥 Пользователей: ${result.users}\n📦 Объявлений: ${result.offers}`);
 
       // Reload stats
       await loadStats();
     } catch (error) {
-      alert('Ошибка синхронизации: ' + (error as Error).message);
+      alert(`Ошибка синхронизации: ${(error as Error).message}`);
     }
   });
 
@@ -207,14 +203,14 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-add-subscription')!.addEventListener('click', async () => {
     const listId = prompt(
       'Введите List ID для подписки:\n\n' +
-      'Это read-only подписка.\n' +
-      'Вы будете получать обновления, но не сможете редактировать список.'
+        'Это read-only подписка.\n' +
+        'Вы будете получать обновления, но не сможете редактировать список.',
     );
 
     if (!listId || !listId.trim()) return;
 
     try {
-      const result = await sendToContentScript('subscribeToList', { listId: listId.trim() }) as {
+      const result = (await sendToContentScript('subscribeToList', { listId: listId.trim() })) as {
         name: string;
         description: string;
         users: number;
@@ -223,15 +219,15 @@ function setupMenuHandlers(): void {
 
       alert(
         `✅ Подписка добавлена!\n\n` +
-        `📋 Название: ${result.name}\n` +
-        `📝 Описание: ${result.description}\n` +
-        `👥 Пользователей: ${result.users}\n` +
-        `📦 Объявлений: ${result.offers}`
+          `📋 Название: ${result.name}\n` +
+          `📝 Описание: ${result.description}\n` +
+          `👥 Пользователей: ${result.users}\n` +
+          `📦 Объявлений: ${result.offers}`,
       );
 
       await loadStats();
     } catch (error) {
-      alert('Ошибка подписки: ' + (error as Error).message);
+      alert(`Ошибка подписки: ${(error as Error).message}`);
     }
   });
 
@@ -248,9 +244,7 @@ function setupMenuHandlers(): void {
 
     subs.forEach((sub, index) => {
       const status = sub.enabled ? '✓' : '✗';
-      const lastSynced = sub.lastSynced
-        ? new Date(sub.lastSynced).toLocaleString('ru-RU')
-        : 'Никогда';
+      const lastSynced = sub.lastSynced ? new Date(sub.lastSynced).toLocaleString('ru-RU') : 'Никогда';
 
       message += `${index + 1}. [${status}] ${sub.name}\n`;
       message += `   ID: ${sub.id.substring(0, 8)}...\n`;
@@ -269,7 +263,7 @@ function setupMenuHandlers(): void {
     const actionTrimmed = action.trim().toUpperCase();
 
     if (actionTrimmed.startsWith('D')) {
-      const num = parseInt(actionTrimmed.substring(1));
+      const num = parseInt(actionTrimmed.substring(1), 10);
 
       if (num >= 1 && num <= subs.length) {
         const sub = subs[num - 1];
@@ -284,7 +278,7 @@ function setupMenuHandlers(): void {
       return;
     }
 
-    const num = parseInt(actionTrimmed);
+    const num = parseInt(actionTrimmed, 10);
     if (num >= 1 && num <= subs.length) {
       const sub = subs[num - 1];
       await sendToContentScript('toggleSubscription', { id: sub.id });
@@ -300,7 +294,7 @@ function setupMenuHandlers(): void {
     try {
       await sendToContentScript('exportDatabase');
     } catch (error) {
-      alert('Ошибка экспорта: ' + (error as Error).message);
+      alert(`Ошибка экспорта: ${(error as Error).message}`);
     }
   });
 
@@ -326,7 +320,7 @@ function setupMenuHandlers(): void {
             browser.tabs.reload(tab.id);
           }
         } catch (error) {
-          alert('Ошибка импорта: ' + (error as Error).message);
+          alert(`Ошибка импорта: ${(error as Error).message}`);
         }
       };
       reader.onerror = () => {
@@ -351,7 +345,7 @@ function setupMenuHandlers(): void {
           browser.tabs.reload(tab.id);
         }
       } catch (error) {
-        alert('Ошибка очистки: ' + (error as Error).message);
+        alert(`Ошибка очистки: ${(error as Error).message}`);
       }
     }
   });
@@ -362,7 +356,7 @@ function setupMenuHandlers(): void {
       await sendToContentScript('debugSyncState');
       alert('Debug info logged to console!\n\nOpen browser console (F12) on the Avito page to view detailed state.');
     } catch (error) {
-      alert('Ошибка отладки: ' + (error as Error).message);
+      alert(`Ошибка отладки: ${(error as Error).message}`);
     }
   });
 }
@@ -391,8 +385,12 @@ async function init(): Promise<void> {
   if (!isAvito) {
     // Disable some buttons that require content script
     const contentScriptButtons = [
-      'btn-export', 'btn-import', 'btn-clear', 'btn-debug',
-      'btn-force-sync', 'btn-enable-sync'
+      'btn-export',
+      'btn-import',
+      'btn-clear',
+      'btn-debug',
+      'btn-force-sync',
+      'btn-enable-sync',
     ];
 
     for (const id of contentScriptButtons) {

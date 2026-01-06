@@ -3,13 +3,13 @@
  */
 
 import {
-  paginationEnabled,
-  publishedListId,
-  publishedEditCode,
-  subscriptions,
   lastLocalChange,
   lastSuccessfulSync,
+  paginationEnabled,
+  publishedEditCode,
+  publishedListId,
   type Subscription,
+  subscriptions,
 } from './storage';
 
 // Catalog data for current page
@@ -98,16 +98,16 @@ export function setMobileCatalogData(items: MobileCatalogItem[]): void {
 
 export function appendMobileCatalogData(items: MobileCatalogItem[]): void {
   const existingIds = new Set(
-    mobileCatalogData
-      .map(item => item.value?.id)
-      .filter((id): id is number => id !== undefined)
+    mobileCatalogData.map((item) => item.value?.id).filter((id): id is number => id !== undefined),
   );
-  const newItems = items.filter(item => {
+  const newItems = items.filter((item) => {
     const id = item.value?.id;
     return id !== undefined && !existingIds.has(id);
   });
   if (newItems.length > 0) {
-    console.log(`[ave] Added ${newItems.length} new items to catalog (total: ${mobileCatalogData.length + newItems.length})`);
+    console.log(
+      `[ave] Added ${newItems.length} new items to catalog (total: ${mobileCatalogData.length + newItems.length})`,
+    );
   }
   mobileCatalogData = [...mobileCatalogData, ...newItems];
 }
@@ -174,11 +174,11 @@ export function getSubscriptions(): Subscription[] {
 }
 
 export function getEnabledSubscriptions(): Subscription[] {
-  return _subscriptions.filter(sub => sub.enabled);
+  return _subscriptions.filter((sub) => sub.enabled);
 }
 
 export async function addSubscription(id: string, name: string): Promise<void> {
-  const existing = _subscriptions.find(sub => sub.id === id);
+  const existing = _subscriptions.find((sub) => sub.id === id);
   if (existing) {
     throw new Error('Already subscribed to this list');
   }
@@ -187,19 +187,19 @@ export async function addSubscription(id: string, name: string): Promise<void> {
     id,
     name,
     enabled: true,
-    lastSynced: null
+    lastSynced: null,
   });
 
   await subscriptions.setValue(_subscriptions);
 }
 
 export async function removeSubscription(id: string): Promise<void> {
-  _subscriptions = _subscriptions.filter(sub => sub.id !== id);
+  _subscriptions = _subscriptions.filter((sub) => sub.id !== id);
   await subscriptions.setValue(_subscriptions);
 }
 
 export async function toggleSubscription(id: string): Promise<void> {
-  const sub = _subscriptions.find(sub => sub.id === id);
+  const sub = _subscriptions.find((sub) => sub.id === id);
   if (sub) {
     sub.enabled = !sub.enabled;
     await subscriptions.setValue(_subscriptions);
@@ -207,7 +207,7 @@ export async function toggleSubscription(id: string): Promise<void> {
 }
 
 export async function updateSubscriptionLastSynced(id: string, timestamp: number): Promise<void> {
-  const sub = _subscriptions.find(sub => sub.id === id);
+  const sub = _subscriptions.find((sub) => sub.id === id);
   if (sub) {
     sub.lastSynced = timestamp;
     await subscriptions.setValue(_subscriptions);
@@ -216,23 +216,27 @@ export async function updateSubscriptionLastSynced(id: string, timestamp: number
 
 export function mergeBlacklists(
   personal: { users?: string[]; offers?: string[] },
-  subscriptionData: Array<{ users?: string[]; offers?: string[] }>
+  subscriptionData: Array<{ users?: string[]; offers?: string[] }>,
 ): { users: Set<string>; offers: Set<string> } {
   const mergedUsers = new Set<string>(personal.users || []);
   const mergedOffers = new Set<string>(personal.offers || []);
 
   for (const sub of subscriptionData) {
     if (sub.users) {
-      sub.users.forEach(u => mergedUsers.add(u));
+      for (const u of sub.users) {
+        mergedUsers.add(u);
+      }
     }
     if (sub.offers) {
-      sub.offers.forEach(o => mergedOffers.add(o));
+      for (const o of sub.offers) {
+        mergedOffers.add(o);
+      }
     }
   }
 
   return {
     users: mergedUsers,
-    offers: mergedOffers
+    offers: mergedOffers,
   };
 }
 

@@ -2,15 +2,17 @@
  * Seller page processing for desktop
  */
 
-import { isUserBlacklisted } from '../state';
 import { addUserToBlacklist, removeUserFromBlacklist } from '../blacklist';
+import { isUserBlacklisted } from '../state';
 
 const SELLER_PAGE_SIDEBAR_SELECTOR = '[class^="ExtendedProfileStickyContainer-"]';
 
 function checkButton(): boolean {
   // Check if our buttons already exist
-  return document.querySelector('[data-marker="ave-block-seller"]') !== null ||
-         document.querySelector('[data-marker="ave-unblock-seller"]') !== null;
+  return (
+    document.querySelector('[data-marker="ave-block-seller"]') !== null ||
+    document.querySelector('[data-marker="ave-unblock-seller"]') !== null
+  );
 }
 
 export function insertBlockedSellerUI(userId: string): void {
@@ -38,7 +40,8 @@ export function insertBlockedSellerUI(userId: string): void {
   // Insert badge after the name element
   const nameElement = sidebar.querySelector('[class*="AvatarNameView-module-name"]');
   if (nameElement && !sidebar.querySelector('.ave-blacklist-badge')) {
-    const badgeHtml = '<div class="ave-blacklist-badge" style="margin-top: 8px; padding: 4px 8px; background-color: #f8cbcb; border-radius: 4px; font-size: 14px; color: #000;">❌ Пользователь в ЧС</div>';
+    const badgeHtml =
+      '<div class="ave-blacklist-badge" style="margin-top: 8px; padding: 4px 8px; background-color: #f8cbcb; border-radius: 4px; font-size: 14px; color: #000;">❌ Пользователь в ЧС</div>';
     nameElement.insertAdjacentHTML('afterend', badgeHtml);
   }
 

@@ -3,38 +3,32 @@
  */
 
 import {
-  exportAll,
-  getAllUsers,
-  getAllOffers,
-  getAllUsersWithTimestamps,
-  getAllOffersWithTimestamps,
-  clearAllUsers,
-  clearAllOffers,
-  addUserWithTimestamp,
   addOfferWithTimestamp,
-  type DBEntry
+  addUserWithTimestamp,
+  clearAllOffers,
+  clearAllUsers,
+  type DBEntry,
+  exportAll,
+  getAllOffers,
+  getAllOffersWithTimestamps,
+  getAllUsers,
+  getAllUsersWithTimestamps,
 } from './db';
 import {
-  setBlacklistUsers,
-  setBlacklistOffers,
-  getPublishedListId,
-  getPublishedEditCode,
-  setPublishedList,
-  getEnabledSubscriptions,
   addSubscription,
-  updateSubscriptionLastSynced,
-  mergeBlacklists,
+  getEnabledSubscriptions,
   getLastLocalChange,
   getLastSuccessfulSync,
-  markSuccessfulSync
+  getPublishedEditCode,
+  getPublishedListId,
+  markSuccessfulSync,
+  mergeBlacklists,
+  setBlacklistOffers,
+  setBlacklistUsers,
+  setPublishedList,
+  updateSubscriptionLastSynced,
 } from './state';
-import {
-  createList,
-  fetchList,
-  fetchLists,
-  updateList,
-  type BlacklistEntry
-} from './supabase';
+import { type BlacklistEntry, createList, fetchList, fetchLists, updateList } from './supabase';
 
 const LOG_PREFIX = '[ave-sync]';
 
@@ -80,10 +74,7 @@ async function updateLocalDB(users: DBEntry[], offers: DBEntry[]): Promise<void>
 /**
  * Bidirectional sync - intelligently upload, download, or merge based on what changed
  */
-export async function bidirectionalSync(
-  listId: string,
-  editCode: string
-): Promise<{ users: number; offers: number }> {
+export async function bidirectionalSync(listId: string, editCode: string): Promise<{ users: number; offers: number }> {
   try {
     console.log(`${LOG_PREFIX} Bidirectional sync starting...`);
 
@@ -94,11 +85,11 @@ export async function bidirectionalSync(
     const remoteUpdatedAt = new Date(remote.updated_at).getTime();
 
     // Normalize remote data format (handle old format: string[] vs new format: {id, addedAt}[])
-    const normalizedRemoteUsers: BlacklistEntry[] = remoteUsers.map(u =>
-      typeof u === 'string' ? { id: u, addedAt: Date.now() } : u
+    const normalizedRemoteUsers: BlacklistEntry[] = remoteUsers.map((u) =>
+      typeof u === 'string' ? { id: u, addedAt: Date.now() } : u,
     );
-    const normalizedRemoteOffers: BlacklistEntry[] = remoteOffers.map(o =>
-      typeof o === 'string' ? { id: o, addedAt: Date.now() } : o
+    const normalizedRemoteOffers: BlacklistEntry[] = remoteOffers.map((o) =>
+      typeof o === 'string' ? { id: o, addedAt: Date.now() } : o,
     );
 
     // Fetch local state
@@ -122,7 +113,7 @@ export async function bidirectionalSync(
       await updateLocalDB(finalUsers, finalOffers);
       await updateList(listId, editCode, {
         users: finalUsers,
-        offers: finalOffers
+        offers: finalOffers,
       });
       await markSuccessfulSync();
     } else if (remoteChanged) {
@@ -139,7 +130,7 @@ export async function bidirectionalSync(
       finalOffers = localOffers;
       await updateList(listId, editCode, {
         users: finalUsers,
-        offers: finalOffers
+        offers: finalOffers,
       });
       await markSuccessfulSync();
     } else {
@@ -150,14 +141,14 @@ export async function bidirectionalSync(
     }
 
     // Update in-memory state
-    setBlacklistUsers(finalUsers.map(e => e.id));
-    setBlacklistOffers(finalOffers.map(e => e.id));
+    setBlacklistUsers(finalUsers.map((e) => e.id));
+    setBlacklistOffers(finalOffers.map((e) => e.id));
 
     console.log(`${LOG_PREFIX} Bidirectional sync complete: ${finalUsers.length} users, ${finalOffers.length} offers`);
 
     return {
       users: finalUsers.length,
-      offers: finalOffers.length
+      offers: finalOffers.length,
     };
   } catch (error) {
     console.error(`${LOG_PREFIX} Bidirectional sync error:`, error);
@@ -172,7 +163,7 @@ export async function bidirectionalSync(
  */
 export async function publishToSupabase(
   name: string,
-  description = ''
+  description = '',
 ): Promise<{ id: string; editCode: string; isNew: boolean }> {
   try {
     console.log(`${LOG_PREFIX} Publishing to Supabase...`);
@@ -193,7 +184,7 @@ export async function publishToSupabase(
         users,
         offers,
         name,
-        description
+        description,
       });
 
       if (!result.success) {
@@ -203,7 +194,7 @@ export async function publishToSupabase(
       return {
         id: existingId,
         editCode: existingEditCode,
-        isNew: false
+        isNew: false,
       };
     }
 
@@ -213,7 +204,7 @@ export async function publishToSupabase(
       name,
       description,
       users,
-      offers
+      offers,
     });
 
     // Save credentials locally
@@ -224,7 +215,7 @@ export async function publishToSupabase(
     return {
       id,
       editCode,
-      isNew: true
+      isNew: true,
     };
   } catch (error) {
     console.error(`${LOG_PREFIX} Publish error:`, error);
@@ -247,7 +238,7 @@ export async function syncSubscriptions(): Promise<{ users: number; offers: numb
     console.log(`${LOG_PREFIX} Syncing ${enabledSubs.length} subscriptions...`);
 
     // Fetch all enabled subscription lists
-    const listIds = enabledSubs.map(sub => sub.id);
+    const listIds = enabledSubs.map((sub) => sub.id);
     const subscriptionData = await fetchLists(listIds);
 
     // Update last synced timestamps
@@ -263,10 +254,10 @@ export async function syncSubscriptions(): Promise<{ users: number; offers: numb
     // Merge personal + subscriptions
     const merged = mergeBlacklists(
       { users: personalUsers, offers: personalOffers },
-      subscriptionData.map(d => ({
-        users: d.users.map(u => typeof u === 'string' ? u : u.id),
-        offers: d.offers.map(o => typeof o === 'string' ? o : o.id)
-      }))
+      subscriptionData.map((d) => ({
+        users: d.users.map((u) => (typeof u === 'string' ? u : u.id)),
+        offers: d.offers.map((o) => (typeof o === 'string' ? o : o.id)),
+      })),
     );
 
     // Update in-memory state
@@ -277,7 +268,7 @@ export async function syncSubscriptions(): Promise<{ users: number; offers: numb
 
     return {
       users: merged.users.size,
-      offers: merged.offers.size
+      offers: merged.offers.size,
     };
   } catch (error) {
     console.error(`${LOG_PREFIX} Sync error:`, error);
@@ -289,7 +280,7 @@ export async function syncSubscriptions(): Promise<{ users: number; offers: numb
  * Subscribe to a read-only Supabase list
  */
 export async function subscribeToList(
-  listId: string
+  listId: string,
 ): Promise<{ name: string; description: string; users: number; offers: number }> {
   try {
     console.log(`${LOG_PREFIX} Subscribing to list ${listId}...`);
@@ -306,7 +297,7 @@ export async function subscribeToList(
       name: list.name,
       description: list.description,
       users: list.users.length,
-      offers: list.offers.length
+      offers: list.offers.length,
     };
   } catch (error) {
     console.error(`${LOG_PREFIX} Subscribe error:`, error);
@@ -319,7 +310,7 @@ export async function subscribeToList(
  */
 export async function importEditableList(
   listId: string,
-  editCode: string
+  editCode: string,
 ): Promise<{ name: string; description: string; users: number; offers: number }> {
   try {
     console.log(`${LOG_PREFIX} Importing editable list ${listId}...`);
@@ -336,7 +327,7 @@ export async function importEditableList(
       name: list.name,
       description: list.description,
       users: list.users.length,
-      offers: list.offers.length
+      offers: list.offers.length,
     };
   } catch (error) {
     console.error(`${LOG_PREFIX} Import editable list error:`, error);

@@ -2,12 +2,12 @@
  * Blacklist operations - add/remove users and offers
  */
 
-import { addUser, removeUser, addOffer, removeOffer } from './db';
+import { addOffer, addUser, removeOffer, removeUser } from './db';
 import {
-  addToBlacklistUsers,
-  removeFromBlacklistUsers,
   addToBlacklistOffers,
-  removeFromBlacklistOffers
+  addToBlacklistUsers,
+  removeFromBlacklistOffers,
+  removeFromBlacklistUsers,
 } from './state';
 
 const LOG_PREFIX = '[ave]';

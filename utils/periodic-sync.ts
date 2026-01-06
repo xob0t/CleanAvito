@@ -3,8 +3,8 @@
  * Handles bidirectional sync: downloads subscriptions + uploads published list
  */
 
-import { syncSubscriptions, bidirectionalSync } from './sync';
-import { getPublishedListId, getPublishedEditCode, getEnabledSubscriptions } from './state';
+import { getEnabledSubscriptions, getPublishedEditCode, getPublishedListId } from './state';
+import { bidirectionalSync, syncSubscriptions } from './sync';
 import { acquireSyncLock, releaseSyncLock } from './sync-lock';
 
 const LOG_PREFIX = '[ave-periodic-sync]';
@@ -25,13 +25,13 @@ export function startPeriodicSync(): void {
   console.log(`${LOG_PREFIX} Starting periodic sync (interval: ${SYNC_INTERVAL / 1000}s)`);
 
   // Run immediately on start
-  syncAndRefresh().catch(error => {
+  syncAndRefresh().catch((error) => {
     console.error(`${LOG_PREFIX} Initial sync failed:`, error);
   });
 
   // Set up interval timer
   syncTimer = setInterval(() => {
-    syncAndRefresh().catch(error => {
+    syncAndRefresh().catch((error) => {
       console.error(`${LOG_PREFIX} Periodic sync failed:`, error);
     });
   }, SYNC_INTERVAL);

@@ -2,7 +2,7 @@
  * Parser utilities for mobile Avito pages
  */
 
-import { setMobileCatalogData, type MobileCatalogItem } from '../state';
+import { type MobileCatalogItem, setMobileCatalogData } from '../state';
 
 const LOG_PREFIX = '[ave]';
 
@@ -32,7 +32,7 @@ export async function fetchMobileCatalogIfNeeded(): Promise<void> {
       // Items are in search.allItems as an object with item IDs as keys
       const allItems = data?.search?.allItems;
       if (allItems && typeof allItems === 'object') {
-        const items = Object.values(allItems).filter(item => item.type === 'item');
+        const items = Object.values(allItems).filter((item) => item.type === 'item');
         if (items.length > 0) {
           console.log(`${LOG_PREFIX} Found ${items.length} items in initialData`);
           setMobileCatalogData(items);
@@ -54,7 +54,7 @@ export function extractUserIdFromMobileData(catalogData: MobileCatalogItem[], of
     return null;
   }
 
-  const item = catalogData.find(item => {
+  const item = catalogData.find((item) => {
     const itemId = item.value?.id;
     return itemId === Number(offerId) || String(itemId) === String(offerId);
   });

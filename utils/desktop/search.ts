@@ -2,16 +2,16 @@
  * Search page processing for desktop
  */
 
-import { catalogData, isUserBlacklisted, isOfferBlacklisted } from '../state';
-import { getOfferId, extractUserIdFromCatalogData } from './parser';
-import { createHiddenContainer, updateHiddenCounter } from '../hidden-container';
 import {
-  insertBlockSellerButton,
   insertBlockOfferButton,
-  insertUnblockSellerButton,
+  insertBlockSellerButton,
   insertUnblockOfferButton,
-  type OfferInfo
+  insertUnblockSellerButton,
+  type OfferInfo,
 } from '../buttons';
+import { createHiddenContainer, updateHiddenCounter } from '../hidden-container';
+import { catalogData, isOfferBlacklisted, isUserBlacklisted } from '../state';
+import { extractUserIdFromCatalogData, getOfferId } from './parser';
 
 const OFFERS_SELECTOR = '[data-marker="item"]';
 const LOG_PREFIX = '[ave]';
@@ -108,7 +108,7 @@ export function processSearchPage(): void {
     if (!offerId) continue;
 
     // Skip offers in the hidden container (handled above)
-    if (hiddenContainer && hiddenContainer.contains(offerElement)) continue;
+    if (hiddenContainer?.contains(offerElement)) continue;
 
     // Skip offers that are already hidden (their clone is in the hidden container)
     if (offerElement.getAttribute('data-ave-hidden') === 'true') continue;

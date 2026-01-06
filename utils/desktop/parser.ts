@@ -63,9 +63,11 @@ export function getCatalogDataFromInit(initialData: InitialData): CatalogItem[] 
 
 export function getSellerId(initialData: InitialData): string | null {
   try {
-    return initialData.data?.ssrData?.initData?.result?.value?.data?.customLink ||
-           initialData.data?.ssrData?.initData?.result?.value?.data?.profileUserHash ||
-           null;
+    return (
+      initialData.data?.ssrData?.initData?.result?.value?.data?.customLink ||
+      initialData.data?.ssrData?.initData?.result?.value?.data?.profileUserHash ||
+      null
+    );
   } catch {
     return null;
   }
@@ -74,8 +76,8 @@ export function getSellerId(initialData: InitialData): string | null {
 // Extract seller ID directly from URL (more reliable than __initialData__)
 export function getSellerIdFromUrl(): string | null {
   const pathname = window.location.pathname;
-  const userMatch = pathname.match(/\/user\/([^\/]+)/);
-  const brandMatch = pathname.match(/\/brands\/([^\/]+)/);
+  const userMatch = pathname.match(/\/user\/([^/]+)/);
+  const brandMatch = pathname.match(/\/brands\/([^/]+)/);
 
   if (userMatch) return userMatch[1].split('?')[0];
   if (brandMatch) return brandMatch[1].split('?')[0];
@@ -102,14 +104,13 @@ export function extractUserIdFromCatalogData(catalogData: CatalogItem[], offerId
 // Extract userId directly from DOM element (fallback when catalog data is unavailable)
 export function extractUserIdFromElement(offerElement: Element): string | null {
   const sellerLinkElement =
-    offerElement.querySelector('a[href*="/user/"]') ||
-    offerElement.querySelector('a[href*="/brands/"]');
+    offerElement.querySelector('a[href*="/user/"]') || offerElement.querySelector('a[href*="/brands/"]');
 
   if (!sellerLinkElement) return null;
 
   const sellerHref = (sellerLinkElement as HTMLAnchorElement).href;
-  const userMatch = sellerHref.match(/\/user\/([^\/]+)/);
-  const brandMatch = sellerHref.match(/\/brands\/([^\/]+)/);
+  const userMatch = sellerHref.match(/\/user\/([^/]+)/);
+  const brandMatch = sellerHref.match(/\/brands\/([^/]+)/);
 
   if (userMatch) return userMatch[1].split('?')[0];
   if (brandMatch) return brandMatch[1].split('?')[0];

@@ -2,31 +2,27 @@
  * Userscript menu using GM_registerMenuCommand
  */
 
-import { getAllUsers, getAllOffers, exportAll, importAll, clearAll } from '../utils/db';
-import {
-  isPaginationEnabled,
-  setPaginationEnabled,
-  setBlacklistUsers,
-  setBlacklistOffers,
-  getPublishedListId,
-  getPublishedEditCode,
-  setPublishedListId,
-  setPublishedEditCode,
-  getEnabledSubscriptions,
-  getSubscriptions,
-  addSubscription,
-  removeSubscription,
-  toggleSubscription,
-  markLocalChange,
-} from './state';
-import { publishToSupabase, subscribeToList, importEditableList } from '../utils/sync';
+import { clearAll, exportAll, getAllOffers, getAllUsers, importAll } from '../utils/db';
+import { checkPaginationVisibility } from '../utils/desktop/pagination';
 import { forceSyncNow } from '../utils/periodic-sync';
 import { fetchList } from '../utils/supabase';
-import { checkPaginationVisibility } from '../utils/desktop/pagination';
+import { importEditableList, publishToSupabase, subscribeToList } from '../utils/sync';
+import {
+  getEnabledSubscriptions,
+  getPublishedEditCode,
+  getPublishedListId,
+  getSubscriptions,
+  isPaginationEnabled,
+  markLocalChange,
+  removeSubscription,
+  setBlacklistOffers,
+  setBlacklistUsers,
+  setPaginationEnabled,
+  toggleSubscription,
+} from './state';
 
 declare function GM_registerMenuCommand(caption: string, commandFunc: () => void): void;
 
-const LOG_PREFIX = '[ave]';
 const isMobile = typeof window !== 'undefined' && window.location.hostname === 'm.avito.ru';
 
 export function registerMenuCommands(): void {
@@ -62,10 +58,12 @@ async function showStats(): Promise<void> {
   const offers = await getAllOffers();
   const subs = getEnabledSubscriptions();
 
-  alert(`📊 Статистика AVE Script\n\n` +
-    `Заблокированных продавцов: ${users.length}\n` +
-    `Заблокированных объявлений: ${offers.length}\n` +
-    `Активных подписок: ${subs.length}`);
+  alert(
+    `📊 Статистика AVE Script\n\n` +
+      `Заблокированных продавцов: ${users.length}\n` +
+      `Заблокированных объявлений: ${offers.length}\n` +
+      `Активных подписок: ${subs.length}`,
+  );
 }
 
 async function togglePagination(): Promise<void> {
@@ -94,8 +92,10 @@ async function enableSync(): Promise<void> {
 
   try {
     const result = await publishToSupabase(name, description);
-    if (result.listId && result.editCode) {
-      alert(`✅ Синхронизация включена!\n\nList ID: ${result.listId}\n\nИспользуйте "Получить данные синхронизации" для копирования данных.`);
+    if (result.id && result.editCode) {
+      alert(
+        `✅ Синхронизация включена!\n\nList ID: ${result.id}\n\nИспользуйте "Получить данные синхронизации" для копирования данных.`,
+      );
     }
   } catch (error) {
     alert(`❌ Ошибка: ${(error as Error).message}`);
@@ -176,13 +176,13 @@ async function manageSubscriptions(): Promise<void> {
   if (!input) return;
 
   if (input.startsWith('d')) {
-    const index = parseInt(input.slice(1)) - 1;
+    const index = parseInt(input.slice(1), 10) - 1;
     if (index >= 0 && index < subs.length) {
       await removeSubscription(subs[index].id);
       alert('✅ Подписка удалена');
     }
   } else {
-    const index = parseInt(input) - 1;
+    const index = parseInt(input, 10) - 1;
     if (index >= 0 && index < subs.length) {
       await toggleSubscription(subs[index].id);
       alert(`✅ Подписка ${subs[index].enabled ? 'выключена' : 'включена'}`);

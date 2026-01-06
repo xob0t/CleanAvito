@@ -29,7 +29,7 @@ async function sha256(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
 
@@ -47,16 +47,16 @@ async function supabaseFetch(endpoint: string, options: RequestInit = {}): Promi
   const url = `${SUPABASE_URL}/rest/v1${endpoint}`;
 
   const headers: HeadersInit = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
     'Content-Type': 'application/json',
-    'Prefer': 'return=representation',
-    ...(options.headers as Record<string, string>)
+    Prefer: 'return=representation',
+    ...(options.headers as Record<string, string>),
   };
 
   const response = await fetch(url, {
     ...options,
-    headers
+    headers,
   });
 
   return response;
@@ -71,11 +71,11 @@ async function callFunction<T>(functionName: string, params: Record<string, unkn
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json'
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(params)
+    body: JSON.stringify(params),
   });
 
   if (!response.ok) {
@@ -106,13 +106,13 @@ export async function createList(params: {
     offers: JSON.stringify(params.offers || []),
     metadata: JSON.stringify({
       created_by: 'ave-script',
-      version: '1.0'
-    })
+      version: '1.0',
+    }),
   };
 
   const response = await supabaseFetch('/blacklists', {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
@@ -120,12 +120,12 @@ export async function createList(params: {
     throw new Error(`Failed to create list: ${error}`);
   }
 
-  const result = await response.json() as Array<{ id: string }>;
+  const result = (await response.json()) as Array<{ id: string }>;
   const listId = result[0].id;
 
   return {
     id: listId,
-    editCode: editCode
+    editCode: editCode,
   };
 }
 
@@ -139,7 +139,7 @@ export async function fetchList(listId: string): Promise<SupabaseList> {
     throw new Error(`Failed to fetch list: ${response.statusText}`);
   }
 
-  const data = await response.json() as Array<{
+  const data = (await response.json()) as Array<{
     id: string;
     name: string;
     description: string;
@@ -162,7 +162,7 @@ export async function fetchList(listId: string): Promise<SupabaseList> {
     users: JSON.parse(list.users),
     offers: JSON.parse(list.offers),
     created_at: list.created_at,
-    updated_at: list.updated_at
+    updated_at: list.updated_at,
   };
 }
 
@@ -174,14 +174,14 @@ export async function fetchLists(listIds: string[]): Promise<SupabaseList[]> {
     return [];
   }
 
-  const orQuery = listIds.map(id => `id.eq.${id}`).join(',');
+  const orQuery = listIds.map((id) => `id.eq.${id}`).join(',');
   const response = await supabaseFetch(`/blacklists?or=(${orQuery})&select=*`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch lists: ${response.statusText}`);
   }
 
-  const data = await response.json() as Array<{
+  const data = (await response.json()) as Array<{
     id: string;
     name: string;
     description: string;
@@ -191,14 +191,14 @@ export async function fetchLists(listIds: string[]): Promise<SupabaseList[]> {
     updated_at: string;
   }>;
 
-  return data.map(list => ({
+  return data.map((list) => ({
     id: list.id,
     name: list.name,
     description: list.description,
     users: JSON.parse(list.users),
     offers: JSON.parse(list.offers),
     created_at: list.created_at,
-    updated_at: list.updated_at
+    updated_at: list.updated_at,
   }));
 }
 
@@ -213,7 +213,7 @@ export async function updateList(
     offers: (string | BlacklistEntry)[];
     name?: string | null;
     description?: string | null;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const editCodeHash = await sha256(editCode);
 
@@ -223,7 +223,7 @@ export async function updateList(
     new_users: JSON.stringify(params.users),
     new_offers: JSON.stringify(params.offers),
     new_name: params.name,
-    new_description: params.description
+    new_description: params.description,
   });
 
   return result;
@@ -237,7 +237,7 @@ export async function deleteList(listId: string, editCode: string): Promise<{ su
 
   const result = await callFunction<{ success: boolean; error?: string }>('delete_blacklist', {
     list_id: listId,
-    edit_code_hash_input: editCodeHash
+    edit_code_hash_input: editCodeHash,
   });
 
   return result;

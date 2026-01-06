@@ -21,9 +21,8 @@ export async function initMobile(): Promise<void> {
 
   // Detect page type
   const currentUrl = window.location.toString();
-  const isSearchPage = currentUrl.includes('/items/search') ||
-                       currentUrl.includes('?query=') ||
-                       !currentUrl.includes('/user/');
+  const isSearchPage =
+    currentUrl.includes('/items/search') || currentUrl.includes('?query=') || !currentUrl.includes('/user/');
 
   if (isSearchPage) {
     console.log(`${LOG_PREFIX} Mobile page detected: search`);
@@ -42,17 +41,18 @@ export async function initMobile(): Promise<void> {
         for (const node of mutation.addedNodes) {
           if (node instanceof Element) {
             // Skip our own hidden container
-            if (node.classList?.contains('hidden-container') ||
-                (node as Element).closest?.('.hidden-container')) {
+            if (node.classList?.contains('hidden-container') || (node as Element).closest?.('.hidden-container')) {
               continue;
             }
 
             // Check if this looks like item content
-            if (node.querySelector?.('[data-marker="item"]') ||
-                node.querySelector?.('[data-item-id]') ||
-                node.querySelector?.('a[href*="_"]') ||
-                node.getAttribute?.('data-marker') === 'item' ||
-                node.getAttribute?.('data-item-id')) {
+            if (
+              node.querySelector?.('[data-marker="item"]') ||
+              node.querySelector?.('[data-item-id]') ||
+              node.querySelector?.('a[href*="_"]') ||
+              node.getAttribute?.('data-marker') === 'item' ||
+              node.getAttribute?.('data-item-id')
+            ) {
               shouldProcess = true;
               break;
             }
@@ -74,7 +74,7 @@ export async function initMobile(): Promise<void> {
 
   observer.observe(document.body || document.documentElement, {
     childList: true,
-    subtree: true
+    subtree: true,
   });
 
   // Also process after a short delay to catch initial render

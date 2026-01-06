@@ -2,11 +2,11 @@
  * Desktop initialization for Avito
  */
 
-import { setCatalogData, type CatalogItem } from '../state';
-import { parseInitialData, getSellerId, getSellerIdFromUrl, decodeHtmlEntities } from './parser';
+import { type CatalogItem, setCatalogData } from '../state';
+import { initPagination } from './pagination';
+import { decodeHtmlEntities, getSellerId, getSellerIdFromUrl, parseInitialData } from './parser';
 import { processSearchPage } from './search';
 import { processSellerPage } from './seller';
-import { initPagination } from './pagination';
 
 const LOG_PREFIX = '[ave]';
 const OFFERS_ROOT_SELECTOR_VALUE = 'bx.catalog.container';
@@ -14,7 +14,9 @@ const OFFERS_ROOT_SELECTOR_VALUE = 'bx.catalog.container';
 // Try to extract catalog data from a parsed JSON object
 function extractCatalogData(initData: Record<string, unknown>): CatalogItem[] | null {
   // Helper to extract items + extraBlockItems from a catalog object
-  function extractFromCatalog(catalog: { items?: CatalogItem[]; extraBlockItems?: CatalogItem[] } | null): CatalogItem[] | null {
+  function extractFromCatalog(
+    catalog: { items?: CatalogItem[]; extraBlockItems?: CatalogItem[] } | null,
+  ): CatalogItem[] | null {
     if (!catalog) return null;
     const catalogItems = catalog.items || [];
     const extraItems = catalog.extraBlockItems || [];
@@ -91,7 +93,7 @@ async function findExistingCatalogData(): Promise<CatalogItem[] | null> {
   const scripts = document.querySelectorAll('script');
   let abCentralFound = false;
   for (const script of scripts) {
-    if (script.textContent && script.textContent.includes('abCentral') && script.textContent.trim().startsWith('{')) {
+    if (script.textContent?.includes('abCentral') && script.textContent.trim().startsWith('{')) {
       abCentralFound = true;
       try {
         const decodedJson = decodeHtmlEntities(script.textContent);
@@ -116,7 +118,7 @@ async function findExistingCatalogData(): Promise<CatalogItem[] | null> {
   // Step 2: Try MFE state script in DOM
   console.log(`${LOG_PREFIX} Step 2: Checking for MFE state script in DOM...`);
   const mfeStateScript = document.querySelector('script[type="mime/invalid"][data-mfe-state="true"]');
-  if (mfeStateScript && mfeStateScript.textContent) {
+  if (mfeStateScript?.textContent) {
     console.log(`${LOG_PREFIX} Found MFE state script in DOM (length: ${mfeStateScript.textContent.length})`);
     try {
       const decodedJson = decodeHtmlEntities(mfeStateScript.textContent);
@@ -156,7 +158,7 @@ async function findExistingCatalogData(): Promise<CatalogItem[] | null> {
     const fetchedScripts = doc.querySelectorAll('script');
     let fetchedAbCentralFound = false;
     for (const script of fetchedScripts) {
-      if (script.textContent && script.textContent.includes('abCentral') && script.textContent.trim().startsWith('{')) {
+      if (script.textContent?.includes('abCentral') && script.textContent.trim().startsWith('{')) {
         fetchedAbCentralFound = true;
         try {
           const decodedJson = decodeHtmlEntities(script.textContent);
@@ -181,7 +183,7 @@ async function findExistingCatalogData(): Promise<CatalogItem[] | null> {
     // Step 3b: Try MFE state script in fetched HTML
     console.log(`${LOG_PREFIX} Step 3b: Checking for MFE state in fetched HTML...`);
     const mfeScript = doc.querySelector('script[type="mime/invalid"][data-mfe-state="true"]');
-    if (mfeScript && mfeScript.textContent) {
+    if (mfeScript?.textContent) {
       console.log(`${LOG_PREFIX} Found MFE state in fetched HTML (length: ${mfeScript.textContent.length})`);
       try {
         const decodedJson = decodeHtmlEntities(mfeScript.textContent);
@@ -236,8 +238,8 @@ function getCatalogDataFromDOM(): CatalogItem[] {
       let userId: string | null = null;
       if (sellerLinkElement) {
         const sellerHref = (sellerLinkElement as HTMLAnchorElement).href;
-        const userMatch = sellerHref.match(/\/user\/([^\/]+)/);
-        const brandMatch = sellerHref.match(/\/brands\/([^\/]+)/);
+        const userMatch = sellerHref.match(/\/user\/([^/]+)/);
+        const brandMatch = sellerHref.match(/\/brands\/([^/]+)/);
 
         if (userMatch) {
           userId = userMatch[1].split('?')[0];
@@ -253,7 +255,7 @@ function getCatalogDataFromDOM(): CatalogItem[] {
       }
 
       catalogDataResult.push({
-        id: parseInt(offerId),
+        id: parseInt(offerId, 10),
         userId: userId || undefined,
         // Create minimal structure for compatibility with extractUserIdFromCatalogData
         iva: {
@@ -261,12 +263,12 @@ function getCatalogDataFromDOM(): CatalogItem[] {
             {
               payload: {
                 profile: {
-                  link: (sellerLinkElement as HTMLAnchorElement)?.href || ''
-                }
-              }
-            }
-          ]
-        }
+                  link: (sellerLinkElement as HTMLAnchorElement)?.href || '',
+                },
+              },
+            },
+          ],
+        },
       });
     }
   });
@@ -279,7 +281,7 @@ function getCatalogDataFromDOM(): CatalogItem[] {
 function findExistingInitialData(): ReturnType<typeof parseInitialData> {
   const scripts = document.querySelectorAll('script');
   for (const script of scripts) {
-    if (script.textContent && script.textContent.includes('__initialData__')) {
+    if (script.textContent?.includes('__initialData__')) {
       return parseInitialData(script.textContent);
     }
   }
@@ -339,22 +341,25 @@ export async function initDesktop(): Promise<void> {
     }
   }
 
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach(async function (node) {
+        mutation.addedNodes.forEach(async (node) => {
           if (isUserPage) {
             // Seller page
             if (node instanceof Element) {
               // Check if sidebar container appeared
-              const isSidebar = node.matches?.('[class^="ExtendedProfileStickyContainer-"]') ||
-                                node.querySelector?.('[class^="ExtendedProfileStickyContainer-"]');
+              const isSidebar =
+                node.matches?.('[class^="ExtendedProfileStickyContainer-"]') ||
+                node.querySelector?.('[class^="ExtendedProfileStickyContainer-"]');
               // Check for profile badge appearing
-              const hasBadge = node.matches?.('[class^="ProfileBadge-root-"]') ||
-                               node.querySelector?.('[class^="ProfileBadge-root-"]');
+              const hasBadge =
+                node.matches?.('[class^="ProfileBadge-root-"]') ||
+                node.querySelector?.('[class^="ProfileBadge-root-"]');
               // Check for subscribe/contact buttons
-              const hasButtons = node.querySelector?.('[class*="SubscribeInfo-module-subscribe"]') ||
-                                 node.querySelector?.('[class*="ContactBar-module-controls"]');
+              const hasButtons =
+                node.querySelector?.('[class*="SubscribeInfo-module-subscribe"]') ||
+                node.querySelector?.('[class*="ContactBar-module-controls"]');
 
               if (isSidebar || hasBadge || hasButtons) {
                 console.log(`${LOG_PREFIX} seller page sidebar/badge/buttons detected`);
@@ -365,7 +370,10 @@ export async function initDesktop(): Promise<void> {
                 }
               }
             }
-            if ((node as Element)?.nodeName === 'SCRIPT' && (node as Element)?.textContent?.includes('__initialData__')) {
+            if (
+              (node as Element)?.nodeName === 'SCRIPT' &&
+              (node as Element)?.textContent?.includes('__initialData__')
+            ) {
               const initialDataContent = (node as Element).textContent!;
               initialData = parseInitialData(initialDataContent);
               console.log(`${LOG_PREFIX} initialData found`);
@@ -384,23 +392,30 @@ export async function initDesktop(): Promise<void> {
             if (node instanceof Element) {
               // Skip mutations inside the hidden container to prevent infinite loops
               const hiddenContainer = document.querySelector('.hidden-container');
-              if (hiddenContainer && (hiddenContainer.contains(node) || (node as Element).closest?.('.hidden-container'))) {
+              if (
+                hiddenContainer &&
+                (hiddenContainer.contains(node) || (node as Element).closest?.('.hidden-container'))
+              ) {
                 return; // Skip - this is our own DOM manipulation
               }
 
               // Skip if this is the hidden container itself or its parent elements (details, summary, hr)
-              if (node.classList?.contains('hidden-container') ||
-                  node.classList?.contains('custom-hr') ||
-                  node.classList?.contains('custom-summary') ||
-                  (node.tagName === 'DETAILS' && node.querySelector('.hidden-container'))) {
+              if (
+                node.classList?.contains('hidden-container') ||
+                node.classList?.contains('custom-hr') ||
+                node.classList?.contains('custom-summary') ||
+                (node.tagName === 'DETAILS' && node.querySelector('.hidden-container'))
+              ) {
                 return; // Skip - this is our own DOM manipulation
               }
 
               // Check if this node or its children contain offer items
-              if (node.getAttribute('elementtiming') === OFFERS_ROOT_SELECTOR_VALUE ||
-                  node.classList?.toString().includes('styles-singlePageWrapper') ||
-                  node.querySelector?.('[data-marker="item"]') ||
-                  node.getAttribute?.('data-marker') === 'item') {
+              if (
+                node.getAttribute('elementtiming') === OFFERS_ROOT_SELECTOR_VALUE ||
+                node.classList?.toString().includes('styles-singlePageWrapper') ||
+                node.querySelector?.('[data-marker="item"]') ||
+                node.getAttribute?.('data-marker') === 'item'
+              ) {
                 console.log(`${LOG_PREFIX} Offers detected in DOM`);
                 processSearchPage();
               }
@@ -408,7 +423,8 @@ export async function initDesktop(): Promise<void> {
             // Watch for MFE state script or abCentral script being added
             if (node instanceof HTMLScriptElement) {
               const isMfeStateScript = node.type === 'mime/invalid' && node.dataset.mfeState === 'true';
-              const isAbCentralScript = node.textContent?.includes('abCentral') && node.textContent?.trim().startsWith('{');
+              const isAbCentralScript =
+                node.textContent?.includes('abCentral') && node.textContent?.trim().startsWith('{');
 
               if (isMfeStateScript || isAbCentralScript) {
                 try {

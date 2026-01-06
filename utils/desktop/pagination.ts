@@ -2,15 +2,8 @@
  * Auto-pagination for desktop search pages
  */
 
-import {
-  catalogData,
-  appendCatalogData,
-  isPaginationEnabled,
-  isLoading,
-  setLoading,
-  type CatalogItem
-} from '../state';
-import { getOfferId, decodeHtmlEntities, extractUserIdFromCatalogData, extractUserIdFromElement } from './parser';
+import { appendCatalogData, type CatalogItem, catalogData, isLoading, isPaginationEnabled, setLoading } from '../state';
+import { decodeHtmlEntities, extractUserIdFromCatalogData, extractUserIdFromElement, getOfferId } from './parser';
 import { updateOfferState } from './search';
 
 const LOG_PREFIX = '[ave]';
@@ -115,7 +108,9 @@ function fixItemImages(item: Element): void {
 
 // Extract catalog data from parsed JSON - handles multiple structures
 function extractCatalogFromJson(initData: Record<string, unknown>): CatalogItem[] | null {
-  function extractFromCatalog(catalog: { items?: CatalogItem[]; extraBlockItems?: CatalogItem[] } | null): CatalogItem[] | null {
+  function extractFromCatalog(
+    catalog: { items?: CatalogItem[]; extraBlockItems?: CatalogItem[] } | null,
+  ): CatalogItem[] | null {
     if (!catalog) return null;
     const catalogItems = catalog.items || [];
     const extraItems = catalog.extraBlockItems || [];
@@ -225,7 +220,7 @@ async function fetchNextPage(): Promise<void> {
     const scriptElements = doc.querySelectorAll('script');
     for (const script of scriptElements) {
       const content = script.textContent?.trim();
-      if (content && content.includes('abCentral') && content.startsWith('{')) {
+      if (content?.includes('abCentral') && content.startsWith('{')) {
         try {
           const decodedJson = decodeHtmlEntities(content);
           const newInitialData = JSON.parse(decodedJson) as Record<string, unknown>;
@@ -253,7 +248,9 @@ async function fetchNextPage(): Promise<void> {
 
     // Process other cities offers (second container if exists)
     if (newContainers.length > 1) {
-      const newOtherCitiesOffers = Array.from(newContainers[1].children).filter((el) => el.hasAttribute('data-item-id'));
+      const newOtherCitiesOffers = Array.from(newContainers[1].children).filter((el) =>
+        el.hasAttribute('data-item-id'),
+      );
       if (newOtherCitiesOffers.length > 0) {
         let targetContainer = getOtherCitiesContainer();
 
@@ -307,8 +304,8 @@ export function checkPaginationVisibility(): void {
 }
 
 function initPaginationObserver(): MutationObserver {
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
       if (mutation.addedNodes.length) {
         checkPaginationVisibility();
       }

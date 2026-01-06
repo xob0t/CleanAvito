@@ -38,13 +38,15 @@ export default defineUnlistedScript(() => {
       try {
         const data = JSON.parse(responseText) as ApiResponse;
         if (data.result?.items && Array.isArray(data.result.items)) {
-          const items = data.result.items.filter(item => item.type === 'item');
+          const items = data.result.items.filter((item) => item.type === 'item');
           if (items.length > 0) {
             console.log(`${LOG_PREFIX} Intercepted ${items.length} items from API`);
             // Send to isolated world via custom event
-            window.dispatchEvent(new CustomEvent('ave:api-data', {
-              detail: { items }
-            }));
+            window.dispatchEvent(
+              new CustomEvent('ave:api-data', {
+                detail: { items },
+              }),
+            );
           }
         }
       } catch {
@@ -55,7 +57,7 @@ export default defineUnlistedScript(() => {
 
   // Intercept fetch
   const originalFetch = window.fetch;
-  window.fetch = async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     const response = await originalFetch.call(this, input, init);
     const url = typeof input === 'string' ? input : (input as Request).url;
 
@@ -80,25 +82,25 @@ export default defineUnlistedScript(() => {
     _aveUrl?: string;
   }
 
-  XMLHttpRequest.prototype.open = function(
+  XMLHttpRequest.prototype.open = function (
     this: ExtendedXHR,
     method: string,
     url: string | URL,
     async?: boolean,
     username?: string | null,
-    password?: string | null
+    password?: string | null,
   ): void {
     this._aveUrl = url.toString();
-    return originalXhrOpen.call(this, method, url, async ?? true, username, password);
+    originalXhrOpen.call(this, method, url, async ?? true, username, password);
   };
 
-  XMLHttpRequest.prototype.send = function(this: ExtendedXHR, body?: Document | XMLHttpRequestBodyInit | null): void {
-    this.addEventListener('load', function(this: ExtendedXHR) {
+  XMLHttpRequest.prototype.send = function (this: ExtendedXHR, body?: Document | XMLHttpRequestBodyInit | null): void {
+    this.addEventListener('load', function (this: ExtendedXHR) {
       if (this._aveUrl && /\/api\/\d+\/items/.test(this._aveUrl)) {
         processApiResponse(this._aveUrl, this.responseText);
       }
     });
-    return originalXhrSend.call(this, body);
+    originalXhrSend.call(this, body);
   };
 
   console.log(`${LOG_PREFIX} Fetch/XHR interceptor installed at document_start`);

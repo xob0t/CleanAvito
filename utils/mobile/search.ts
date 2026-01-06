@@ -2,26 +2,22 @@
  * Search page processing for mobile
  */
 
-import { mobileCatalogData, isUserBlacklisted, isOfferBlacklisted } from '../state';
-import { extractUserIdFromMobileData, fetchMobileCatalogIfNeeded } from './parser';
-import { createHiddenContainer, updateHiddenCounter } from '../hidden-container';
 import {
-  insertBlockSellerButton,
   insertBlockOfferButton,
-  insertUnblockSellerButton,
+  insertBlockSellerButton,
   insertUnblockOfferButton,
-  type OfferInfo
+  insertUnblockSellerButton,
+  type OfferInfo,
 } from '../buttons';
+import { createHiddenContainer, updateHiddenCounter } from '../hidden-container';
+import { isOfferBlacklisted, isUserBlacklisted, mobileCatalogData } from '../state';
+import { extractUserIdFromMobileData, fetchMobileCatalogIfNeeded } from './parser';
 
 const LOG_PREFIX = '[ave]';
 
 // Mobile uses different selectors - we need to find item cards
 // Common patterns: data-marker="item", data-item-id, or class-based selectors
-const MOBILE_OFFERS_SELECTORS = [
-  '[data-marker="item"]',
-  '[data-item-id]',
-  'a[href*="_"][class*="item"]'
-];
+const MOBILE_OFFERS_SELECTORS = ['[data-marker="item"]', '[data-item-id]', 'a[href*="_"][class*="item"]'];
 
 function findOfferElements(): Element[] {
   for (const selector of MOBILE_OFFERS_SELECTORS) {
@@ -33,7 +29,7 @@ function findOfferElements(): Element[] {
 
   // Fallback: Find links that look like item links
   const allLinks = document.querySelectorAll('a[href]');
-  const itemLinks = Array.from(allLinks).filter(link => {
+  const itemLinks = Array.from(allLinks).filter((link) => {
     const href = link.getAttribute('href');
     // Match item URLs like /category/item-title_1234567890
     return href && /_\d{8,}/.test(href) && !href.includes('/user/');
@@ -42,13 +38,16 @@ function findOfferElements(): Element[] {
   if (itemLinks.length > 0) {
     console.log(`${LOG_PREFIX} Found ${itemLinks.length} offers via link pattern`);
     // Return parent elements that might be the card containers
-    return itemLinks.map(link => {
+    return itemLinks.map((link) => {
       // Find a reasonable parent container
       let parent = link.parentElement;
       for (let i = 0; i < 5 && parent; i++) {
-        if (parent.tagName === 'ARTICLE' || parent.tagName === 'LI' ||
-            parent.getAttribute('data-marker') === 'item' ||
-            parent.getAttribute('data-item-id')) {
+        if (
+          parent.tagName === 'ARTICLE' ||
+          parent.tagName === 'LI' ||
+          parent.getAttribute('data-marker') === 'item' ||
+          parent.getAttribute('data-item-id')
+        ) {
           return parent;
         }
         parent = parent.parentElement;
@@ -73,7 +72,9 @@ function getOfferIdFromElement(element: Element): string | null {
   }
 
   // Extract from link href
-  const link = element.querySelector('a[href]') as HTMLAnchorElement | null || (element.tagName === 'A' ? element as HTMLAnchorElement : null);
+  const link =
+    (element.querySelector('a[href]') as HTMLAnchorElement | null) ||
+    (element.tagName === 'A' ? (element as HTMLAnchorElement) : null);
   if (link) {
     const href = link.getAttribute('href');
     // Match pattern like _1234567890
@@ -216,7 +217,7 @@ export async function processMobileSearchPage(): Promise<void> {
     }
 
     // Skip offers in the hidden container (handled above)
-    if (hiddenContainer && hiddenContainer.contains(offerElement)) continue;
+    if (hiddenContainer?.contains(offerElement)) continue;
 
     // Skip offers that are already hidden (their clone is in the hidden container)
     if (offerElement.getAttribute('data-ave-hidden') === 'true') continue;
