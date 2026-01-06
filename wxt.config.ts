@@ -19,5 +19,9 @@ export default defineConfig({
       48: '/icon.svg',
       128: '/icon.svg',
     },
+    action: {
+      default_title: 'AVE Script',
+      default_popup: 'popup/index.html',
+    },
   },
 });
