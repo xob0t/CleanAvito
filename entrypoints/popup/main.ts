@@ -8,6 +8,7 @@ import { storage } from 'wxt/storage';
 const paginationEnabled = storage.defineItem<boolean>('local:paginationEnabled', { fallback: false });
 const publishedListId = storage.defineItem<string | null>('local:publishedListId', { fallback: null });
 const publishedEditCode = storage.defineItem<string | null>('local:publishedEditCode', { fallback: null });
+const subscriptionsEnabled = storage.defineItem<boolean>('local:subscriptionsEnabled', { fallback: true });
 
 interface Subscription {
   id: string;
@@ -18,33 +19,54 @@ interface Subscription {
 
 const subscriptions = storage.defineItem<Subscription[]>('local:subscriptions', { fallback: [] });
 
+let isOnAvito = false;
+
+// View management
+function showView(viewId: string): void {
+  for (const v of document.querySelectorAll('.view')) {
+    v.classList.remove('active');
+  }
+  document.getElementById(viewId)?.classList.add('active');
+}
+
 // Helper to send message to content script
 async function sendToContentScript(action: string, data?: unknown): Promise<unknown> {
+  if (!isOnAvito) {
+    throw new Error('Please open avito.ru first');
+  }
+
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
     throw new Error('No active tab found');
   }
 
-  return browser.tabs.sendMessage(tab.id, { action, data });
+  try {
+    return await browser.tabs.sendMessage(tab.id, { action, data });
+  } catch (error) {
+    // Handle "Receiving end does not exist" error
+    const msg = (error as Error).message || '';
+    if (msg.includes('Receiving end does not exist') || msg.includes('Could not establish connection')) {
+      throw new Error('Refresh avito.ru page and try again');
+    }
+    throw error;
+  }
 }
 
 // Load and display stats
 async function loadStats(): Promise<void> {
   try {
-    // Get stats from content script via message
-    const result = (await sendToContentScript('getStats')) as { users: number; offers: number } | null;
-
-    if (result) {
-      document.getElementById('stat-users')!.textContent = String(result.users);
-      document.getElementById('stat-offers')!.textContent = String(result.offers);
+    if (isOnAvito) {
+      const result = (await sendToContentScript('getStats')) as { users: number; offers: number } | null;
+      if (result) {
+        document.getElementById('stat-users')!.textContent = String(result.users);
+        document.getElementById('stat-offers')!.textContent = String(result.offers);
+      }
     }
   } catch {
-    // Content script might not be loaded, show placeholders
     document.getElementById('stat-users')!.textContent = '-';
     document.getElementById('stat-offers')!.textContent = '-';
   }
 
-  // Get subscriptions count
   const subs = await subscriptions.getValue();
   document.getElementById('stat-subs')!.textContent = String(subs.length);
   document.getElementById('badge-subs')!.textContent = String(subs.length);
@@ -64,46 +86,146 @@ async function initPaginationToggle(): Promise<void> {
     await paginationEnabled.setValue(!current);
     toggle.classList.toggle('active');
 
-    // Notify content script
-    try {
-      await sendToContentScript('togglePagination', !current);
-    } catch {
-      // Content script might not be available
+    if (isOnAvito) {
+      try {
+        await sendToContentScript('togglePagination', !current);
+      } catch {
+        // Ignore
+      }
     }
   });
 }
 
+// Initialize subscriptions toggle
+async function initSubscriptionsToggle(): Promise<void> {
+  const toggle = document.getElementById('toggle-subs')!;
+  const enabled = await subscriptionsEnabled.getValue();
+
+  if (enabled) {
+    toggle.classList.add('active');
+  }
+
+  document.getElementById('btn-subs-toggle')!.addEventListener('click', async () => {
+    const current = await subscriptionsEnabled.getValue();
+    await subscriptionsEnabled.setValue(!current);
+    toggle.classList.toggle('active');
+  });
+}
+
+// Render subscriptions list
+async function renderSubscriptionsList(): Promise<void> {
+  const subs = await subscriptions.getValue();
+  const listEl = document.getElementById('subs-list')!;
+  const emptyEl = document.getElementById('subs-empty')!;
+
+  if (subs.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = subs
+    .map(
+      (sub) => `
+    <div class="sub-item" data-id="${sub.id}">
+      <div class="sub-info">
+        <div class="sub-name">${escapeHtml(sub.name)}</div>
+        <div class="sub-meta">${sub.id.substring(0, 8)}... • ${sub.lastSynced ? formatDate(sub.lastSynced) : 'Never synced'}</div>
+      </div>
+      <div class="sub-actions">
+        <div class="toggle-switch sub-toggle ${sub.enabled ? 'active' : ''}" data-id="${sub.id}"></div>
+        <div class="sub-delete" data-id="${sub.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  `,
+    )
+    .join('');
+
+  // Add event listeners for toggles
+  listEl.querySelectorAll('.sub-toggle').forEach((toggle) => {
+    toggle.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = (toggle as HTMLElement).dataset.id!;
+      const currentSubs = await subscriptions.getValue();
+      const updatedSubs = currentSubs.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s));
+      await subscriptions.setValue(updatedSubs);
+      toggle.classList.toggle('active');
+    });
+  });
+
+  // Add event listeners for delete buttons
+  listEl.querySelectorAll('.sub-delete').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = (btn as HTMLElement).dataset.id!;
+      const currentSubs = await subscriptions.getValue();
+      const sub = currentSubs.find((s) => s.id === id);
+      if (sub && confirm(`Delete subscription "${sub.name}"?`)) {
+        const updatedSubs = currentSubs.filter((s) => s.id !== id);
+        await subscriptions.setValue(updatedSubs);
+        await renderSubscriptionsList();
+        await loadStats();
+      }
+    });
+  });
+}
+
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString();
+}
+
 // Setup menu button handlers
 function setupMenuHandlers(): void {
+  // View navigation
+  document.getElementById('btn-open-subs')!.addEventListener('click', async () => {
+    await renderSubscriptionsList();
+    showView('view-subs');
+  });
+
+  document.getElementById('btn-subs-back')!.addEventListener('click', () => {
+    showView('view-main');
+  });
+
+  document.getElementById('btn-open-data')!.addEventListener('click', () => {
+    showView('view-data');
+  });
+
+  document.getElementById('btn-data-back')!.addEventListener('click', () => {
+    showView('view-main');
+  });
+
   // Enable sync
   document.getElementById('btn-enable-sync')!.addEventListener('click', async () => {
     const existingId = await publishedListId.getValue();
 
     if (existingId) {
-      alert(
-        'Синхронизация уже включена!\n\n' +
-          'Для подключения другого устройства используйте:\n' +
-          '"Получить данные синхронизации"',
-      );
+      alert('Sync already enabled!\n\nUse "Copy sync credentials" to connect another device.');
       return;
     }
 
-    const name = prompt('Включение синхронизации\n\nВведите название списка:', 'Мой черный список');
+    const name = prompt('Enable Sync\n\nEnter list name:', 'My Blacklist');
     if (!name) return;
 
-    const description = prompt('Описание (необязательно):') || '';
+    const description = prompt('Description (optional):') || '';
 
     try {
       const result = (await sendToContentScript('publishToSupabase', { name, description })) as { id: string };
-      alert(
-        `✅ Синхронизация включена!\n\n` +
-          `Изменения будут автоматически синхронизироваться между устройствами.\n\n` +
-          `Для подключения другого устройства используйте:\n` +
-          `"Получить данные синхронизации"`,
-      );
+      alert('Sync enabled!\n\nChanges will auto-sync between devices.\n\nUse "Copy sync credentials" to connect another device.');
       console.log('Published to Supabase:', result.id);
     } catch (error) {
-      alert(`Ошибка публикации: ${(error as Error).message}`);
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 
@@ -113,7 +235,7 @@ function setupMenuHandlers(): void {
     const editCode = await publishedEditCode.getValue();
 
     if (!listId || !editCode) {
-      alert('Синхронизация не включена.\n\nИспользуйте "Включить синхронизацию" для настройки.');
+      alert('Sync not enabled.\n\nUse "Enable sync" first.');
       return;
     }
 
@@ -121,27 +243,15 @@ function setupMenuHandlers(): void {
 
     try {
       await navigator.clipboard.writeText(credentialsJSON);
-      alert(
-        `✅ Данные для синхронизации скопированы!\n\n` +
-          `Для подключения другого устройства:\n` +
-          `1. Откройте меню на другом устройстве\n` +
-          `2. Выберите "Подключить синхронизацию"\n` +
-          `3. Вставьте эти данные из буфера обмена`,
-      );
+      alert('Sync credentials copied!\n\nPaste them on another device using "Connect to sync".');
     } catch {
-      prompt('Скопируйте данные для синхронизации:', credentialsJSON);
+      prompt('Copy sync credentials:', credentialsJSON);
     }
   });
 
   // Connect sync
   document.getElementById('btn-connect-sync')!.addEventListener('click', async () => {
-    const input = prompt(
-      'Подключение синхронизации\n\n' +
-        'Вставьте данные из буфера обмена:\n' +
-        '{"listId":"...","editCode":"..."}\n\n' +
-        'Получить данные можно на другом устройстве:\n' +
-        '"Получить данные синхронизации"',
-    );
+    const input = prompt('Connect to Sync\n\nPaste credentials:\n{"listId":"...","editCode":"..."}');
 
     if (!input || !input.trim()) return;
 
@@ -150,12 +260,12 @@ function setupMenuHandlers(): void {
     try {
       const parsed = JSON.parse(input.trim()) as { listId?: string; editCode?: string };
       if (!parsed.listId || !parsed.editCode) {
-        throw new Error('JSON должен содержать listId и editCode');
+        throw new Error('Invalid format');
       }
       listId = parsed.listId;
       editCode = parsed.editCode;
-    } catch (e) {
-      alert(`Ошибка формата JSON:\n\n${(e as Error).message}\n\nОжидается: {"listId":"...","editCode":"..."}`);
+    } catch {
+      alert('Invalid JSON format.\n\nExpected: {"listId":"...","editCode":"..."}');
       return;
     }
 
@@ -166,46 +276,31 @@ function setupMenuHandlers(): void {
         offers: number;
       };
 
-      alert(
-        `✅ Синхронизация подключена!\n\n` +
-          `📋 Список: ${result.name}\n` +
-          `👥 Пользователей: ${result.users}\n` +
-          `📦 Объявлений: ${result.offers}\n\n` +
-          `Изменения автоматически синхронизируются между устройствами.`,
-      );
+      alert(`Connected!\n\nList: ${result.name}\nSellers: ${result.users}\nListings: ${result.offers}`);
 
-      // Reload the active tab
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (tab?.id) {
         browser.tabs.reload(tab.id);
       }
     } catch (error) {
-      alert(`Ошибка подключения: ${(error as Error).message}`);
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 
   // Force sync
   document.getElementById('btn-force-sync')!.addEventListener('click', async () => {
     try {
-      alert('Синхронизация начата...');
       const result = (await sendToContentScript('forceSync')) as { users: number; offers: number };
-
-      alert(`✅ Синхронизация завершена!\n\n👥 Пользователей: ${result.users}\n📦 Объявлений: ${result.offers}`);
-
-      // Reload stats
+      alert(`Sync complete!\n\nSellers: ${result.users}\nListings: ${result.offers}`);
       await loadStats();
     } catch (error) {
-      alert(`Ошибка синхронизации: ${(error as Error).message}`);
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 
   // Add subscription
   document.getElementById('btn-add-subscription')!.addEventListener('click', async () => {
-    const listId = prompt(
-      'Введите List ID для подписки:\n\n' +
-        'Это read-only подписка.\n' +
-        'Вы будете получать обновления, но не сможете редактировать список.',
-    );
+    const listId = prompt('Add Subscription\n\nEnter List ID:\n\nThis is a read-only subscription.');
 
     if (!listId || !listId.trim()) return;
 
@@ -217,75 +312,12 @@ function setupMenuHandlers(): void {
         offers: number;
       };
 
-      alert(
-        `✅ Подписка добавлена!\n\n` +
-          `📋 Название: ${result.name}\n` +
-          `📝 Описание: ${result.description}\n` +
-          `👥 Пользователей: ${result.users}\n` +
-          `📦 Объявлений: ${result.offers}`,
-      );
+      alert(`Subscribed!\n\nName: ${result.name}\nSellers: ${result.users}\nListings: ${result.offers}`);
 
+      await renderSubscriptionsList();
       await loadStats();
     } catch (error) {
-      alert(`Ошибка подписки: ${(error as Error).message}`);
-    }
-  });
-
-  // Manage subscriptions
-  document.getElementById('btn-manage-subscriptions')!.addEventListener('click', async () => {
-    const subs = await subscriptions.getValue();
-
-    if (subs.length === 0) {
-      alert('У вас нет подписок.\n\nИспользуйте "Добавить подписку" для добавления списков.');
-      return;
-    }
-
-    let message = '📋 Управление подписками:\n\n';
-
-    subs.forEach((sub, index) => {
-      const status = sub.enabled ? '✓' : '✗';
-      const lastSynced = sub.lastSynced ? new Date(sub.lastSynced).toLocaleString('ru-RU') : 'Никогда';
-
-      message += `${index + 1}. [${status}] ${sub.name}\n`;
-      message += `   ID: ${sub.id.substring(0, 8)}...\n`;
-      message += `   Синхронизировано: ${lastSynced}\n\n`;
-    });
-
-    message += '\nДействия:\n';
-    message += '• Введите номер (1-9) для вкл/выкл\n';
-    message += '• Введите D1-D9 для удаления\n';
-    message += '• Нажмите Cancel для выхода';
-
-    const action = prompt(message);
-
-    if (!action) return;
-
-    const actionTrimmed = action.trim().toUpperCase();
-
-    if (actionTrimmed.startsWith('D')) {
-      const num = parseInt(actionTrimmed.substring(1), 10);
-
-      if (num >= 1 && num <= subs.length) {
-        const sub = subs[num - 1];
-        if (confirm(`Удалить подписку "${sub.name}"?`)) {
-          await sendToContentScript('removeSubscription', { id: sub.id });
-          alert('Подписка удалена!');
-          await loadStats();
-        }
-      } else {
-        alert('Неверный номер');
-      }
-      return;
-    }
-
-    const num = parseInt(actionTrimmed, 10);
-    if (num >= 1 && num <= subs.length) {
-      const sub = subs[num - 1];
-      await sendToContentScript('toggleSubscription', { id: sub.id });
-      alert(`Подписка "${sub.name}" ${sub.enabled ? 'отключена' : 'включена'}!`);
-      await loadStats();
-    } else {
-      alert('Неверный ввод');
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 
@@ -294,7 +326,7 @@ function setupMenuHandlers(): void {
     try {
       await sendToContentScript('exportDatabase');
     } catch (error) {
-      alert(`Ошибка экспорта: ${(error as Error).message}`);
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 
@@ -313,18 +345,18 @@ function setupMenuHandlers(): void {
         try {
           const jsonText = event.target?.result as string;
           await sendToContentScript('importDatabase', { jsonText });
+          alert('Import successful!');
 
-          // Reload the active tab
           const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
           if (tab?.id) {
             browser.tabs.reload(tab.id);
           }
         } catch (error) {
-          alert(`Ошибка импорта: ${(error as Error).message}`);
+          alert(`Error: ${(error as Error).message}`);
         }
       };
       reader.onerror = () => {
-        alert('Ошибка чтения файла');
+        alert('Error reading file');
       };
       reader.readAsText(file);
     };
@@ -334,18 +366,17 @@ function setupMenuHandlers(): void {
 
   // Clear database
   document.getElementById('btn-clear')!.addEventListener('click', async () => {
-    if (confirm('База данных будет очищена, вы уверены?')) {
+    if (confirm('Clear all data?\n\nThis cannot be undone.')) {
       try {
         await sendToContentScript('clearDatabase');
-        alert('База данных очищена!');
+        alert('Database cleared!');
 
-        // Reload the active tab
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
           browser.tabs.reload(tab.id);
         }
       } catch (error) {
-        alert(`Ошибка очистки: ${(error as Error).message}`);
+        alert(`Error: ${(error as Error).message}`);
       }
     }
   });
@@ -354,15 +385,15 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-debug')!.addEventListener('click', async () => {
     try {
       await sendToContentScript('debugSyncState');
-      alert('Debug info logged to console!\n\nOpen browser console (F12) on the Avito page to view detailed state.');
+      alert('Debug info logged to console.\n\nOpen F12 on avito.ru to view.');
     } catch (error) {
-      alert(`Ошибка отладки: ${(error as Error).message}`);
+      alert(`Error: ${(error as Error).message}`);
     }
   });
 }
 
 // Check if we're on an Avito page
-async function checkAvitaPage(): Promise<boolean> {
+async function checkAvitoPage(): Promise<boolean> {
   try {
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (tab?.url) {
@@ -376,14 +407,12 @@ async function checkAvitaPage(): Promise<boolean> {
 
 // Initialize popup
 async function init(): Promise<void> {
-  await loadStats();
-  await initPaginationToggle();
-  setupMenuHandlers();
+  isOnAvito = await checkAvitoPage();
 
-  // Check if we're on Avito - show warning if not
-  const isAvito = await checkAvitaPage();
-  if (!isAvito) {
-    // Disable some buttons that require content script
+  if (!isOnAvito) {
+    document.getElementById('not-avito-notice')!.style.display = 'flex';
+
+    // Disable buttons that require content script
     const contentScriptButtons = [
       'btn-export',
       'btn-import',
@@ -391,6 +420,7 @@ async function init(): Promise<void> {
       'btn-debug',
       'btn-force-sync',
       'btn-enable-sync',
+      'btn-add-subscription',
     ];
 
     for (const id of contentScriptButtons) {
@@ -401,6 +431,11 @@ async function init(): Promise<void> {
       }
     }
   }
+
+  await loadStats();
+  await initPaginationToggle();
+  await initSubscriptionsToggle();
+  setupMenuHandlers();
 }
 
 // Run on load
