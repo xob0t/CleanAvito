@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=320">
+  <title>AVE Script</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      font-size: 13px;
+      width: 320px;
+      background: #09090b;
+      color: #fafafa;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+    .view.active {
+      display: block;
+    }
+
+    .header {
+      background: #09090b;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .header-back {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #a1a1aa;
+      transition: all 0.15s ease;
+    }
+
+    .header-back:hover {
+      background: #27272a;
+      color: #fafafa;
+    }
+
+    .header-back svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: #71717a;
+      margin-top: 1px;
+    }
+
+    .stats {
+      background: #18181b;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #71717a;
+    }
+
+    .section {
+      padding: 4px 0;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: #71717a;
+      text-transform: uppercase;
+      padding: 12px 16px 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      gap: 12px;
+      color: #fafafa;
+      margin: 0 8px;
+      border-radius: 6px;
+    }
+
+    .menu-item:hover {
+      background: #27272a;
+    }
+
+    .menu-item:active {
+      background: #3f3f46;
+    }
+
+    .menu-item.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .menu-item.disabled:hover {
+      background: transparent;
+    }
+
+    .menu-item.destructive {
+      color: #ef4444;
+    }
+
+    .menu-item.destructive .menu-icon {
+      color: #ef4444;
+    }
+
+    .menu-icon {
+      width: 18px;
+      height: 18px;
+      color: #a1a1aa;
+      flex-shrink: 0;
+    }
+
+    .menu-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .menu-text {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .menu-arrow {
+      color: #52525b;
+    }
+
+    .menu-arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .menu-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: #27272a;
+      color: #a1a1aa;
+      font-weight: 500;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: #3f3f46;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch.active {
+      background: #3b82f6;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fafafa;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(16px);
+    }
+
+    .sub-list {
+      padding: 8px;
+    }
+
+    .sub-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #18181b;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #27272a;
+    }
+
+    .sub-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .sub-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sub-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sub-meta {
+      font-size: 11px;
+      color: #71717a;
+      margin-top: 2px;
+    }
+
+    .sub-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sub-delete {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #71717a;
+      transition: all 0.15s ease;
+    }
+
+    .sub-delete:hover {
+      background: #27272a;
+      color: #ef4444;
+    }
+
+    .sub-delete svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: #71717a;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .footer {
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: #52525b;
+      border-top: 1px solid #27272a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .footer a {
+      color: #71717a;
+      text-decoration: none;
+      transition: color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer a:hover {
+      color: #fafafa;
+    }
+
+    .footer svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .notice {
+      background: #27272a;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin: 8px;
+      font-size: 12px;
+      color: #a1a1aa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notice svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .notice.warning {
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px solid rgba(234, 179, 8, 0.2);
+      color: #eab308;
+    }
+
+    .sync-card {
+      margin: 8px;
+      padding: 12px;
+      background: #18181b;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .sync-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+    }
+
+    .sync-indicator.active {
+      background: #22c55e;
+    }
+
+    .sync-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .sync-status .toggle-switch {
+      margin-left: auto;
+    }
+
+    .sync-id {
+      font-size: 11px;
+      color: #71717a;
+      font-family: monospace;
+    }
+
+    .sync-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sync-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .sync-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .sync-btn.primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .sync-btn.primary:hover {
+      background: #2563eb;
+    }
+
+    .sync-btn.secondary {
+      background: #27272a;
+      color: #fafafa;
+    }
+
+    .sync-btn.secondary:hover {
+      background: #3f3f46;
+    }
+
+    .sync-btn.ghost {
+      background: transparent;
+      color: #a1a1aa;
+    }
+
+    .sync-btn.ghost:hover {
+      background: #27272a;
+      color: #fafafa;
+    }
+
+    .sync-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      width: calc(100% - 32px);
+      max-width: 288px;
+      transform: scale(0.95);
+      transition: transform 0.15s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 16px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-message {
+      font-size: 13px;
+      color: #a1a1aa;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #09090b;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #fafafa;
+      font-size: 13px;
+      margin-top: 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .modal-input:focus {
+      border-color: #3b82f6;
+    }
+
+    .modal-input::placeholder {
+      color: #52525b;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      border-top: 1px solid #27272a;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .modal-btn.secondary {
+      background: #27272a;
+      color: #fafafa;
+    }
+
+    .modal-btn.secondary:hover {
+      background: #3f3f46;
+    }
+
+    .modal-btn.primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .modal-btn.primary:hover {
+      background: #2563eb;
+    }
+
+    .modal-btn.destructive {
+      background: #dc2626;
+      color: white;
+    }
+
+    .modal-btn.destructive:hover {
+      background: #b91c1c;
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      color: #fafafa;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      pointer-events: auto;
+      animation: toast-in 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast.hiding {
+      animation: toast-out 0.15s ease forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(8px); }
+    }
+
+    .toast-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .toast.success .toast-icon { color: #22c55e; }
+    .toast.error .toast-icon { color: #ef4444; }
+    .toast.info .toast-icon { color: #3b82f6; }
+
+    .toast-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toast-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .toast-message {
+      color: #a1a1aa;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <!-- Main View -->
+  <div class="view active" id="view-main">
+    <div class="header">
+      <div class="header-icon">A</div>
+      <div>
+        <div class="header-title">AVE Script</div>
+        <div class="header-subtitle">Менеджер чёрного списка Avito</div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-users">-</div>
+        <div class="stat-label">Продавцов</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-offers">-</div>
+        <div class="stat-label">Объявлений</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-subs">-</div>
+        <div class="stat-label">Подписок</div>
+      </div>
+    </div>
+
+    <div id="not-avito-notice" class="notice warning" style="display: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+      </svg>
+      <span>Откройте avito.ru для синхронизации</span>
+    </div>
+
+    <div class="section" id="section-pagination">
+      <div class="section-title">Настройки</div>
+      <div class="menu-item" id="btn-pagination">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18"/><rect x="4" y="8" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><rect x="16" y="10" width="4" height="4" rx="1"/>
+          </svg>
+        </span>
+        <span class="menu-text">Авто-пагинация</span>
+        <div class="toggle-switch" id="toggle-pagination"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Облачная синхронизация</div>
+
+      <!-- Sync disabled state -->
+      <div id="sync-disabled" class="sync-card">
+        <div class="sync-status">
+          <div class="sync-indicator"></div>
+          <div class="sync-label">Синхронизация отключена</div>
+          <div class="toggle-switch" id="toggle-sync"></div>
+        </div>
+      </div>
+
+      <!-- Sync enabled state -->
+      <div id="sync-enabled" class="sync-card" style="display: none;">
+        <div class="sync-status">
+          <div class="sync-indicator active"></div>
+          <div>
+            <div class="sync-label">Синхронизация включена</div>
+            <div class="sync-id" id="sync-list-id"></div>
+          </div>
+          <div class="toggle-switch active" id="toggle-sync-off"></div>
+        </div>
+        <div class="sync-actions">
+          <button class="sync-btn secondary" id="btn-copy-credentials">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Копировать
+          </button>
+          <button class="sync-btn secondary" id="btn-force-sync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+            Синхр.
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Подписки</div>
+      <div class="menu-item" id="btn-subs-toggle">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="menu-text">Включить подписки</span>
+        <div class="toggle-switch" id="toggle-subs"></div>
+      </div>
+      <div class="menu-item" id="btn-open-subs">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>
+          </svg>
+        </span>
+        <span class="menu-text">Управление подписками</span>
+        <span class="menu-badge" id="badge-subs">0</span>
+        <span class="menu-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Данные</div>
+      <div class="menu-item" id="btn-open-data">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+          </svg>
+        </span>
+        <span class="menu-text">Импорт / Экспорт</span>
+        <span class="menu-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Отладка</div>
+      <div class="menu-item" id="btn-debug">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>
+          </svg>
+        </span>
+        <span class="menu-text">Вывести состояние синхр.</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://github.com/xob0t/ave-script" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+      <span style="color: #3f3f46">|</span>
+      <span>v1.1.0</span>
+    </div>
+  </div>
+
+  <!-- Subscriptions View -->
+  <div class="view" id="view-subs">
+    <div class="header">
+      <div class="header-back" id="btn-subs-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">Подписки</div>
+        <div class="header-subtitle">Управление подписками</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="menu-item" id="btn-add-subscription">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>
+          </svg>
+        </span>
+        <span class="menu-text">Добавить подписку</span>
+      </div>
+    </div>
+
+    <div id="subs-list" class="sub-list">
+      <!-- Populated by JS -->
+    </div>
+
+    <div id="subs-empty" class="empty-state" style="display: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <div>Подписок пока нет</div>
+      <div style="font-size: 12px; margin-top: 4px;">Добавьте ID списка для подписки</div>
+    </div>
+  </div>
+
+  <!-- Data View -->
+  <div class="view" id="view-data">
+    <div class="header">
+      <div class="header-back" id="btn-data-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">Данные</div>
+        <div class="header-subtitle">Импорт и экспорт</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="menu-item" id="btn-export">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+          </svg>
+        </span>
+        <span class="menu-text">Экспорт в JSON</span>
+      </div>
+      <div class="menu-item" id="btn-import">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+        </span>
+        <span class="menu-text">Импорт из JSON</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Опасная зона</div>
+      <div class="menu-item destructive" id="btn-clear">
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+          </svg>
+        </span>
+        <span class="menu-text">Очистить все данные</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">Title</div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-message" id="modal-message"></div>
+        <input type="text" class="modal-input" id="modal-input" style="display: none;">
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn secondary" id="modal-cancel">Cancel</button>
+        <button class="modal-btn primary" id="modal-confirm">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
