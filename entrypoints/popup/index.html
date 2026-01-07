@@ -12,76 +12,89 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 14px;
-      width: 300px;
-      background: #0d0d0d;
-      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      font-size: 13px;
+      width: 320px;
+      background: #09090b;
+      color: #fafafa;
+      line-height: 1.5;
     }
 
     .header {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      color: white;
+      background: #09090b;
       padding: 16px;
       display: flex;
       align-items: center;
       gap: 12px;
+      border-bottom: 1px solid #27272a;
     }
 
     .header-icon {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
     }
 
     .header-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
+      color: #fafafa;
     }
 
     .header-subtitle {
       font-size: 12px;
-      opacity: 0.85;
+      color: #71717a;
+      margin-top: 1px;
     }
 
     .stats {
       background: #18181b;
-      padding: 14px 16px;
-      display: flex;
-      justify-content: space-around;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
       border-bottom: 1px solid #27272a;
     }
 
     .stat-item {
       text-align: center;
+      padding: 8px;
+      background: #09090b;
+      border-radius: 8px;
+      border: 1px solid #27272a;
     }
 
     .stat-value {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
-      color: #60a5fa;
+      color: #fafafa;
     }
 
     .stat-label {
-      font-size: 11px;
+      font-size: 10px;
       color: #71717a;
       margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .section {
-      padding: 8px 0;
-      border-bottom: 1px solid #27272a;
-    }
-
-    .section:last-child {
-      border-bottom: none;
+      padding: 4px 0;
     }
 
     .section-title {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       color: #71717a;
       text-transform: uppercase;
-      padding: 8px 16px 4px;
+      padding: 12px 16px 6px;
       letter-spacing: 0.5px;
     }
 
@@ -90,9 +103,11 @@
       align-items: center;
       padding: 10px 16px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.15s ease;
       gap: 12px;
-      color: #e4e4e7;
+      color: #fafafa;
+      margin: 0 8px;
+      border-radius: 6px;
     }
 
     .menu-item:hover {
@@ -113,21 +128,29 @@
     }
 
     .menu-icon {
-      font-size: 18px;
-      width: 24px;
-      text-align: center;
+      width: 18px;
+      height: 18px;
+      color: #a1a1aa;
+      flex-shrink: 0;
+    }
+
+    .menu-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .menu-text {
       flex: 1;
+      font-size: 13px;
     }
 
     .menu-badge {
       font-size: 11px;
       padding: 2px 8px;
-      border-radius: 10px;
-      background: #3f3f46;
+      border-radius: 9999px;
+      background: #27272a;
       color: #a1a1aa;
+      font-weight: 500;
     }
 
     .menu-badge.active {
@@ -137,16 +160,17 @@
 
     .toggle-switch {
       position: relative;
-      width: 40px;
-      height: 22px;
+      width: 36px;
+      height: 20px;
       background: #3f3f46;
-      border-radius: 11px;
+      border-radius: 9999px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
     }
 
     .toggle-switch.active {
-      background: #22c55e;
+      background: #3b82f6;
     }
 
     .toggle-switch::after {
@@ -154,144 +178,198 @@
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       background: #fafafa;
       border-radius: 50%;
-      transition: transform 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
     .toggle-switch.active::after {
-      transform: translateX(18px);
+      transform: translateX(16px);
     }
 
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      color: #71717a;
-    }
-
-    .loading.show {
-      display: block;
+    .divider {
+      height: 1px;
+      background: #27272a;
+      margin: 4px 16px;
     }
 
     .footer {
-      padding: 10px 16px;
+      padding: 12px 16px;
       text-align: center;
       font-size: 11px;
       color: #52525b;
       border-top: 1px solid #27272a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .footer a {
-      color: #60a5fa;
+      color: #71717a;
       text-decoration: none;
-      transition: color 0.15s;
+      transition: color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .footer a:hover {
-      color: #93c5fd;
-      text-decoration: underline;
+      color: #fafafa;
+    }
+
+    .footer svg {
+      width: 14px;
+      height: 14px;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <svg class="header-icon" viewBox="0 0 128 128">
-      <rect width="128" height="128" rx="16" fill="rgba(255,255,255,0.2)"/>
-      <text x="64" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white">A</text>
-    </svg>
+    <div class="header-icon">A</div>
     <div>
       <div class="header-title">AVE Script</div>
-      <div class="header-subtitle">Черный список Avito</div>
+      <div class="header-subtitle">Avito Blacklist Manager</div>
     </div>
   </div>
 
   <div class="stats" id="stats">
     <div class="stat-item">
       <div class="stat-value" id="stat-users">-</div>
-      <div class="stat-label">Продавцов</div>
+      <div class="stat-label">Sellers</div>
     </div>
     <div class="stat-item">
       <div class="stat-value" id="stat-offers">-</div>
-      <div class="stat-label">Объявлений</div>
+      <div class="stat-label">Listings</div>
     </div>
     <div class="stat-item">
       <div class="stat-value" id="stat-subs">-</div>
-      <div class="stat-label">Подписок</div>
+      <div class="stat-label">Subs</div>
     </div>
   </div>
 
   <div class="section" id="section-pagination">
-    <div class="section-title">Настройки</div>
+    <div class="section-title">Settings</div>
     <div class="menu-item" id="btn-pagination">
-      <span class="menu-icon">📜</span>
-      <span class="menu-text">Авто-пагинация</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18"/><rect x="4" y="8" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><rect x="16" y="10" width="4" height="4" rx="1"/>
+        </svg>
+      </span>
+      <span class="menu-text">Auto-pagination</span>
       <div class="toggle-switch" id="toggle-pagination"></div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Синхронизация</div>
+    <div class="section-title">Sync</div>
     <div class="menu-item" id="btn-enable-sync">
-      <span class="menu-icon">☁️</span>
-      <span class="menu-text">Включить синхронизацию</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        </svg>
+      </span>
+      <span class="menu-text">Enable sync</span>
     </div>
     <div class="menu-item" id="btn-get-sync-data">
-      <span class="menu-icon">📋</span>
-      <span class="menu-text">Получить данные синхронизации</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      </span>
+      <span class="menu-text">Copy sync credentials</span>
     </div>
     <div class="menu-item" id="btn-connect-sync">
-      <span class="menu-icon">🔗</span>
-      <span class="menu-text">Подключить синхронизацию</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      </span>
+      <span class="menu-text">Connect to sync</span>
     </div>
     <div class="menu-item" id="btn-force-sync">
-      <span class="menu-icon">🔄</span>
-      <span class="menu-text">Принудительная синхронизация</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+        </svg>
+      </span>
+      <span class="menu-text">Force sync</span>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Подписки</div>
+    <div class="section-title">Subscriptions</div>
     <div class="menu-item" id="btn-add-subscription">
-      <span class="menu-icon">📥</span>
-      <span class="menu-text">Добавить подписку</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>
+        </svg>
+      </span>
+      <span class="menu-text">Add subscription</span>
     </div>
     <div class="menu-item" id="btn-manage-subscriptions">
-      <span class="menu-icon">📋</span>
-      <span class="menu-text">Управление подписками</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      <span class="menu-text">Manage subscriptions</span>
       <span class="menu-badge" id="badge-subs">0</span>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Данные</div>
+    <div class="section-title">Data</div>
     <div class="menu-item" id="btn-export">
-      <span class="menu-icon">📤</span>
-      <span class="menu-text">Экспорт в JSON</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+        </svg>
+      </span>
+      <span class="menu-text">Export JSON</span>
     </div>
     <div class="menu-item" id="btn-import">
-      <span class="menu-icon">📥</span>
-      <span class="menu-text">Импорт из файла</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+        </svg>
+      </span>
+      <span class="menu-text">Import JSON</span>
     </div>
     <div class="menu-item" id="btn-clear">
-      <span class="menu-icon">🗑️</span>
-      <span class="menu-text">Очистить базу данных</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+        </svg>
+      </span>
+      <span class="menu-text">Clear database</span>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Отладка</div>
+    <div class="section-title">Debug</div>
     <div class="menu-item" id="btn-debug">
-      <span class="menu-icon">🐛</span>
-      <span class="menu-text">Debug: Log Sync State</span>
+      <span class="menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>
+        </svg>
+      </span>
+      <span class="menu-text">Log sync state</span>
     </div>
   </div>
 
   <div class="footer">
-    <a href="https://github.com/xob0t/ave-script" target="_blank">GitHub</a> • v1.1.0
+    <a href="https://github.com/xob0t/ave-script" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+      </svg>
+      GitHub
+    </a>
+    <span style="color: #3f3f46">|</span>
+    <span>v1.1.0</span>
   </div>
 
   <script type="module" src="./main.ts"></script>
