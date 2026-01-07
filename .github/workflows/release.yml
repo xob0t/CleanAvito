@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Chrome extension
+        run: bun run build
+
+      - name: Build Firefox extension
+        run: bun run build:firefox
+
+      - name: Build userscript
+        run: bun run build:userscript
+
+      - name: Zip Chrome extension
+        run: bun run zip
+
+      - name: Zip Firefox extension
+        run: bun run zip:firefox
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Rename artifacts
+        run: |
+          mv .output/ave-script-*-chrome.zip ./ave-script-${{ steps.version.outputs.VERSION }}-chrome.zip
+          mv .output/ave-script-*-firefox.zip ./ave-script-${{ steps.version.outputs.VERSION }}-firefox.zip
+          mv .output/ave-script.user.js ./ave-script-${{ steps.version.outputs.VERSION }}.user.js
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            ave-script-${{ steps.version.outputs.VERSION }}-chrome.zip
+            ave-script-${{ steps.version.outputs.VERSION }}-firefox.zip
+            ave-script-${{ steps.version.outputs.VERSION }}.user.js
