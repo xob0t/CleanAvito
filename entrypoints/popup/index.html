@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=320">
@@ -655,22 +655,22 @@
       <div class="header-icon">A</div>
       <div>
         <div class="header-title">AVE Script</div>
-        <div class="header-subtitle">Avito Blacklist Manager</div>
+        <div class="header-subtitle">Менеджер чёрного списка Avito</div>
       </div>
     </div>
 
     <div class="stats" id="stats">
       <div class="stat-item">
         <div class="stat-value" id="stat-users">-</div>
-        <div class="stat-label">Sellers</div>
+        <div class="stat-label">Продавцов</div>
       </div>
       <div class="stat-item">
         <div class="stat-value" id="stat-offers">-</div>
-        <div class="stat-label">Listings</div>
+        <div class="stat-label">Объявлений</div>
       </div>
       <div class="stat-item">
         <div class="stat-value" id="stat-subs">-</div>
-        <div class="stat-label">Subs</div>
+        <div class="stat-label">Подписок</div>
       </div>
     </div>
 
@@ -678,30 +678,30 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
       </svg>
-      <span>Open avito.ru to use sync features</span>
+      <span>Откройте avito.ru для синхронизации</span>
     </div>
 
     <div class="section" id="section-pagination">
-      <div class="section-title">Settings</div>
+      <div class="section-title">Настройки</div>
       <div class="menu-item" id="btn-pagination">
         <span class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 3v18"/><rect x="4" y="8" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><rect x="16" y="10" width="4" height="4" rx="1"/>
           </svg>
         </span>
-        <span class="menu-text">Auto-pagination</span>
+        <span class="menu-text">Авто-пагинация</span>
         <div class="toggle-switch" id="toggle-pagination"></div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Cloud Sync</div>
+      <div class="section-title">Облачная синхронизация</div>
 
       <!-- Sync disabled state -->
       <div id="sync-disabled" class="sync-card">
         <div class="sync-status">
           <div class="sync-indicator"></div>
-          <div class="sync-label">Sync disabled</div>
+          <div class="sync-label">Синхронизация отключена</div>
           <div class="toggle-switch" id="toggle-sync"></div>
         </div>
       </div>
@@ -711,7 +711,7 @@
         <div class="sync-status">
           <div class="sync-indicator active"></div>
           <div>
-            <div class="sync-label">Sync enabled</div>
+            <div class="sync-label">Синхронизация включена</div>
             <div class="sync-id" id="sync-list-id"></div>
           </div>
           <div class="toggle-switch active" id="toggle-sync-off"></div>
@@ -721,27 +721,27 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            Copy
+            Копировать
           </button>
           <button class="sync-btn secondary" id="btn-force-sync">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
             </svg>
-            Sync
+            Синхр.
           </button>
         </div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Subscriptions</div>
+      <div class="section-title">Подписки</div>
       <div class="menu-item" id="btn-subs-toggle">
         <span class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </span>
-        <span class="menu-text">Enable subscriptions</span>
+        <span class="menu-text">Включить подписки</span>
         <div class="toggle-switch" id="toggle-subs"></div>
       </div>
       <div class="menu-item" id="btn-open-subs">
@@ -750,7 +750,7 @@
             <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>
           </svg>
         </span>
-        <span class="menu-text">Manage subscriptions</span>
+        <span class="menu-text">Управление подписками</span>
         <span class="menu-badge" id="badge-subs">0</span>
         <span class="menu-arrow">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -761,14 +761,14 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Data</div>
+      <div class="section-title">Данные</div>
       <div class="menu-item" id="btn-open-data">
         <span class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
           </svg>
         </span>
-        <span class="menu-text">Import / Export</span>
+        <span class="menu-text">Импорт / Экспорт</span>
         <span class="menu-arrow">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6"/>
@@ -778,14 +778,14 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Debug</div>
+      <div class="section-title">Отладка</div>
       <div class="menu-item" id="btn-debug">
         <span class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>
           </svg>
         </span>
-        <span class="menu-text">Log sync state</span>
+        <span class="menu-text">Вывести состояние синхр.</span>
       </div>
     </div>
 
@@ -810,8 +810,8 @@
         </svg>
       </div>
       <div>
-        <div class="header-title">Subscriptions</div>
-        <div class="header-subtitle">Manage read-only lists</div>
+        <div class="header-title">Подписки</div>
+        <div class="header-subtitle">Управление подписками</div>
       </div>
     </div>
 
@@ -822,7 +822,7 @@
             <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>
           </svg>
         </span>
-        <span class="menu-text">Add subscription</span>
+        <span class="menu-text">Добавить подписку</span>
       </div>
     </div>
 
@@ -834,8 +834,8 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
-      <div>No subscriptions yet</div>
-      <div style="font-size: 12px; margin-top: 4px;">Add a list ID to subscribe</div>
+      <div>Подписок пока нет</div>
+      <div style="font-size: 12px; margin-top: 4px;">Добавьте ID списка для подписки</div>
     </div>
   </div>
 
@@ -848,8 +848,8 @@
         </svg>
       </div>
       <div>
-        <div class="header-title">Data</div>
-        <div class="header-subtitle">Import & Export</div>
+        <div class="header-title">Данные</div>
+        <div class="header-subtitle">Импорт и экспорт</div>
       </div>
     </div>
 
@@ -860,7 +860,7 @@
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
           </svg>
         </span>
-        <span class="menu-text">Export to JSON</span>
+        <span class="menu-text">Экспорт в JSON</span>
       </div>
       <div class="menu-item" id="btn-import">
         <span class="menu-icon">
@@ -868,19 +868,19 @@
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
           </svg>
         </span>
-        <span class="menu-text">Import from JSON</span>
+        <span class="menu-text">Импорт из JSON</span>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Danger Zone</div>
+      <div class="section-title">Опасная зона</div>
       <div class="menu-item destructive" id="btn-clear">
         <span class="menu-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
           </svg>
         </span>
-        <span class="menu-text">Clear all data</span>
+        <span class="menu-text">Очистить все данные</span>
       </div>
     </div>
   </div>

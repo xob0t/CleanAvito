@@ -193,13 +193,13 @@ async function showSyncChoiceModal(): Promise<'create' | 'import' | null> {
     const confirmBtn = document.getElementById('modal-confirm')!;
     const cancelBtn = document.getElementById('modal-cancel')!;
 
-    titleEl.textContent = 'Enable Cloud Sync';
-    messageEl.textContent = 'Choose how to set up sync:';
+    titleEl.textContent = 'Включить синхронизацию';
+    messageEl.textContent = 'Выберите способ настройки:';
     messageEl.style.display = 'block';
     inputEl.style.display = 'none';
-    confirmBtn.textContent = 'Create new';
+    confirmBtn.textContent = 'Создать новый';
     confirmBtn.className = 'modal-btn primary';
-    cancelBtn.textContent = 'Import existing';
+    cancelBtn.textContent = 'Импортировать';
     cancelBtn.className = 'modal-btn secondary';
 
     const cleanup = () => {
@@ -259,7 +259,7 @@ async function sendToContentScript(action: string, data?: unknown): Promise<unkn
     // Handle "Receiving end does not exist" error
     const msg = (error as Error).message || '';
     if (msg.includes('Receiving end does not exist') || msg.includes('Could not establish connection')) {
-      throw new Error('Refresh avito.ru page and try again');
+      throw new Error('Обновите страницу avito.ru и попробуйте снова');
     }
     throw error;
   }
@@ -345,7 +345,7 @@ async function renderSubscriptionsList(): Promise<void> {
     <div class="sub-item" data-id="${sub.id}">
       <div class="sub-info">
         <div class="sub-name">${escapeHtml(sub.name)}</div>
-        <div class="sub-meta">${sub.id.substring(0, 8)}... • ${sub.lastSynced ? formatDate(sub.lastSynced) : 'Never synced'}</div>
+        <div class="sub-meta">${sub.id.substring(0, 8)}... • ${sub.lastSynced ? formatDate(sub.lastSynced) : 'Не синхронизировано'}</div>
       </div>
       <div class="sub-actions">
         <div class="toggle-switch sub-toggle ${sub.enabled ? 'active' : ''}" data-id="${sub.id}"></div>
@@ -379,7 +379,7 @@ async function renderSubscriptionsList(): Promise<void> {
       const id = (btn as HTMLElement).dataset.id!;
       const currentSubs = await subscriptions.getValue();
       const sub = currentSubs.find((s) => s.id === id);
-      if (sub && (await modalConfirm('Delete subscription', `Remove "${sub.name}" from your subscriptions?`, true))) {
+      if (sub && (await modalConfirm('Удалить подписку', `Удалить "${sub.name}" из ваших подписок?`, true))) {
         const updatedSubs = currentSubs.filter((s) => s.id !== id);
         await subscriptions.setValue(updatedSubs);
         await renderSubscriptionsList();
@@ -436,21 +436,21 @@ function setupMenuHandlers(): void {
     if (!choice) return;
 
     if (choice === 'create') {
-      const name = await modalPrompt('Create New Sync', 'Enter a name for your blacklist', 'My Blacklist');
+      const name = await modalPrompt('Создать синхронизацию', 'Введите название чёрного списка', 'Мой чёрный список');
       if (!name) return;
 
-      const description = (await modalPrompt('Description', 'Optional description for your list')) || '';
+      const description = (await modalPrompt('Описание', 'Необязательное описание списка')) || '';
 
       try {
         const result = (await sendToContentScript('publishToSupabase', { name, description })) as { id: string };
         await updateSyncUI();
-        showToast('success', 'Sync enabled', 'Your blacklist will now sync across devices');
+        showToast('success', 'Синхронизация включена', 'Ваш список будет синхронизироваться между устройствами');
         console.log('Published to Supabase:', result.id);
       } catch (error) {
-        showToast('error', 'Error', (error as Error).message);
+        showToast('error', 'Ошибка', (error as Error).message);
       }
     } else {
-      const input = await modalPrompt('Import Sync', 'Paste credentials from another device', '', 'Paste JSON here...');
+      const input = await modalPrompt('Импорт синхронизации', 'Вставьте данные с другого устройства', '', 'Вставьте JSON...');
 
       if (!input || !input.trim()) return;
 
@@ -464,7 +464,7 @@ function setupMenuHandlers(): void {
         listId = parsed.listId;
         editCode = parsed.editCode;
       } catch {
-        showToast('error', 'Invalid format', 'Paste the JSON copied from another device');
+        showToast('error', 'Неверный формат', 'Вставьте JSON скопированный с другого устройства');
         return;
       }
 
@@ -476,14 +476,14 @@ function setupMenuHandlers(): void {
         };
 
         await updateSyncUI();
-        showToast('success', 'Sync connected', `${result.name}: ${result.users} sellers, ${result.offers} listings`);
+        showToast('success', 'Синхронизация подключена', `${result.name}: ${result.users} продавцов, ${result.offers} объявлений`);
 
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
           browser.tabs.reload(tab.id);
         }
       } catch (error) {
-        showToast('error', 'Error', (error as Error).message);
+        showToast('error', 'Ошибка', (error as Error).message);
       }
     }
   });
@@ -499,9 +499,9 @@ function setupMenuHandlers(): void {
 
     try {
       await navigator.clipboard.writeText(credentialsJSON);
-      showToast('success', 'Copied', 'Paste on another device to connect');
+      showToast('success', 'Скопировано', 'Вставьте на другом устройстве для подключения');
     } catch {
-      await modalAlert('Copy credentials', credentialsJSON);
+      await modalAlert('Скопируйте данные', credentialsJSON);
     }
   });
 
@@ -509,28 +509,28 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-force-sync')!.addEventListener('click', async () => {
     try {
       const result = (await sendToContentScript('forceSync')) as { users: number; offers: number };
-      showToast('success', 'Sync complete', `${result.users} sellers, ${result.offers} listings`);
+      showToast('success', 'Синхронизация завершена', `${result.users} продавцов, ${result.offers} объявлений`);
       await loadStats();
     } catch (error) {
-      showToast('error', 'Error', (error as Error).message);
+      showToast('error', 'Ошибка', (error as Error).message);
     }
   });
 
   // Sync toggle (disable)
   document.getElementById('toggle-sync-off')!.addEventListener('click', async () => {
-    if (!(await modalConfirm('Disable sync', 'Your local data will be kept, but changes won\'t sync to the cloud anymore.'))) {
+    if (!(await modalConfirm('Отключить синхронизацию', 'Локальные данные сохранятся, но изменения больше не будут синхронизироваться.'))) {
       return;
     }
 
     await publishedListId.setValue(null);
     await publishedEditCode.setValue(null);
     await updateSyncUI();
-    showToast('info', 'Sync disabled', 'Your local blacklist is still available');
+    showToast('info', 'Синхронизация отключена', 'Локальный список по-прежнему доступен');
   });
 
   // Add subscription
   document.getElementById('btn-add-subscription')!.addEventListener('click', async () => {
-    const listId = await modalPrompt('Add Subscription', 'Enter List ID (read-only subscription)', '', 'List ID...');
+    const listId = await modalPrompt('Добавить подписку', 'Введите ID списка (только чтение)', '', 'ID списка...');
 
     if (!listId || !listId.trim()) return;
 
@@ -542,12 +542,12 @@ function setupMenuHandlers(): void {
         offers: number;
       };
 
-      showToast('success', 'Subscribed', `${result.name}: ${result.users} sellers, ${result.offers} listings`);
+      showToast('success', 'Подписка добавлена', `${result.name}: ${result.users} продавцов, ${result.offers} объявлений`);
 
       await renderSubscriptionsList();
       await loadStats();
     } catch (error) {
-      showToast('error', 'Error', (error as Error).message);
+      showToast('error', 'Ошибка', (error as Error).message);
     }
   });
 
@@ -555,9 +555,9 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-export')!.addEventListener('click', async () => {
     try {
       await sendToContentScript('exportDatabase');
-      showToast('success', 'Exported', 'Database saved to file');
+      showToast('success', 'Экспортировано', 'База данных сохранена в файл');
     } catch (error) {
-      showToast('error', 'Error', (error as Error).message);
+      showToast('error', 'Ошибка', (error as Error).message);
     }
   });
 
@@ -576,18 +576,18 @@ function setupMenuHandlers(): void {
         try {
           const jsonText = event.target?.result as string;
           await sendToContentScript('importDatabase', { jsonText });
-          showToast('success', 'Import successful', 'Database has been restored');
+          showToast('success', 'Импорт завершён', 'База данных восстановлена');
 
           const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
           if (tab?.id) {
             browser.tabs.reload(tab.id);
           }
         } catch (error) {
-          showToast('error', 'Error', (error as Error).message);
+          showToast('error', 'Ошибка', (error as Error).message);
         }
       };
       reader.onerror = () => {
-        showToast('error', 'Error', 'Failed to read file');
+        showToast('error', 'Ошибка', 'Не удалось прочитать файл');
       };
       reader.readAsText(file);
     };
@@ -597,17 +597,17 @@ function setupMenuHandlers(): void {
 
   // Clear database
   document.getElementById('btn-clear')!.addEventListener('click', async () => {
-    if (await modalConfirm('Clear all data', 'This action cannot be undone. All your blacklist data will be permanently deleted.', true)) {
+    if (await modalConfirm('Очистить все данные', 'Это действие нельзя отменить. Все данные чёрного списка будут удалены.', true)) {
       try {
         await sendToContentScript('clearDatabase');
-        showToast('success', 'Cleared', 'All data has been removed');
+        showToast('success', 'Очищено', 'Все данные удалены');
 
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
           browser.tabs.reload(tab.id);
         }
       } catch (error) {
-        showToast('error', 'Error', (error as Error).message);
+        showToast('error', 'Ошибка', (error as Error).message);
       }
     }
   });
@@ -616,9 +616,9 @@ function setupMenuHandlers(): void {
   document.getElementById('btn-debug')!.addEventListener('click', async () => {
     try {
       await sendToContentScript('debugSyncState');
-      showToast('info', 'Debug logged', 'Open F12 on avito.ru to view');
+      showToast('info', 'Отладка записана', 'Откройте F12 на avito.ru для просмотра');
     } catch (error) {
-      showToast('error', 'Error', (error as Error).message);
+      showToast('error', 'Ошибка', (error as Error).message);
     }
   });
 }
