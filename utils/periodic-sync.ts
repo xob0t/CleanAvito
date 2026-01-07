@@ -15,8 +15,9 @@ let syncTimer: ReturnType<typeof setInterval> | null = null;
 /**
  * Start periodic synchronization
  * Runs every 5 minutes automatically
+ * @param skipInitialSync - If true, skip the immediate sync (useful when caller already ran sync)
  */
-export function startPeriodicSync(): void {
+export function startPeriodicSync(skipInitialSync = false): void {
   if (syncTimer) {
     console.log(`${LOG_PREFIX} Already running`);
     return;
@@ -24,10 +25,12 @@ export function startPeriodicSync(): void {
 
   console.log(`${LOG_PREFIX} Starting periodic sync (interval: ${SYNC_INTERVAL / 1000}s)`);
 
-  // Run immediately on start
-  syncAndRefresh().catch((error) => {
-    console.error(`${LOG_PREFIX} Initial sync failed:`, error);
-  });
+  // Run immediately on start (unless skipped)
+  if (!skipInitialSync) {
+    syncAndRefresh().catch((error) => {
+      console.error(`${LOG_PREFIX} Initial sync failed:`, error);
+    });
+  }
 
   // Set up interval timer
   syncTimer = setInterval(() => {

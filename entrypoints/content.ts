@@ -83,16 +83,8 @@ export default defineContentScript({
       styleObserver.observe(document.documentElement, { childList: true });
     }
 
-    // Track initialization state
-    let blacklistReady = false;
-    let pendingDomInit = false;
-
     // Function to initialize platform-specific features (called when blacklist is ready)
     const initPlatform = async () => {
-      if (!blacklistReady) {
-        pendingDomInit = true;
-        return;
-      }
       if (isMobile) {
         await initMobile();
       } else {
@@ -118,78 +110,66 @@ export default defineContentScript({
       await runMigration();
       console.log(`${LOG_PREFIX} Migration check complete`);
 
-      // Check for published list (bidirectional sync)
-      const publishedId = getPublishedListId();
-      const publishedEditCode = getPublishedEditCode();
+      // STEP 1: Load local blacklist immediately (fast, no network)
+      const localUsers = await getAllUsers();
+      const localOffers = await getAllOffers();
+      setBlacklistUsers(localUsers);
+      setBlacklistOffers(localOffers);
+      console.log(`${LOG_PREFIX} Local blacklist loaded: ${localUsers.length} users, ${localOffers.length} offers`);
 
-      if (publishedId && publishedEditCode) {
-        console.log(`${LOG_PREFIX} Published list found, starting bidirectional sync...`);
-
-        try {
-          // Bidirectional sync for published list
-          const syncResult = await bidirectionalSync(publishedId, publishedEditCode);
-          console.log(
-            `${LOG_PREFIX} Bidirectional sync complete: ${syncResult.users} users, ${syncResult.offers} offers`,
-          );
-
-          // Start periodic sync
-          startPeriodicSync();
-        } catch (syncError) {
-          console.error(`${LOG_PREFIX} Bidirectional sync failed, using local only:`, syncError);
-          // Fallback to local list only
-          const users = await getAllUsers();
-          const offers = await getAllOffers();
-          setBlacklistUsers(users);
-          setBlacklistOffers(offers);
-        }
+      // STEP 2: Initialize platform immediately with local data
+      if (document.readyState === 'loading') {
+        await new Promise<void>((resolve) => {
+          document.addEventListener('DOMContentLoaded', () => {
+            initPlatform().then(resolve);
+          });
+        });
       } else {
-        // No published list - check for subscriptions
-        const enabledSubs = getEnabledSubscriptions();
-
-        if (enabledSubs.length > 0) {
-          console.log(`${LOG_PREFIX} Found ${enabledSubs.length} enabled subscriptions, syncing...`);
-
-          try {
-            // Sync subscriptions (automatically merges with personal list)
-            const syncResult = await syncSubscriptions();
-            console.log(`${LOG_PREFIX} Sync complete: ${syncResult.users} users, ${syncResult.offers} offers`);
-
-            // Start periodic sync
-            startPeriodicSync();
-          } catch (syncError) {
-            console.error(`${LOG_PREFIX} Sync failed, using personal list only:`, syncError);
-            // Fallback to personal list only
-            const users = await getAllUsers();
-            const offers = await getAllOffers();
-            setBlacklistUsers(users);
-            setBlacklistOffers(offers);
-          }
-        } else {
-          // No sync enabled, use local only
-          console.log(`${LOG_PREFIX} No sync enabled, using local list only`);
-          const users = await getAllUsers();
-          const offers = await getAllOffers();
-          setBlacklistUsers(users);
-          setBlacklistOffers(offers);
-        }
+        await initPlatform();
       }
 
-      console.log(`${LOG_PREFIX} Blacklist loaded`);
-      blacklistReady = true;
+      // STEP 3: Run sync in background (doesn't block page processing)
+      const publishedId = getPublishedListId();
+      const publishedEditCode = getPublishedEditCode();
+      const enabledSubs = getEnabledSubscriptions();
 
-      // If DOM was already ready and waiting, init platform now
-      if (pendingDomInit) {
-        await initPlatform();
+      if (publishedId && publishedEditCode) {
+        console.log(`${LOG_PREFIX} Published list found, syncing in background...`);
+        bidirectionalSync(publishedId, publishedEditCode)
+          .then((syncResult) => {
+            console.log(
+              `${LOG_PREFIX} Bidirectional sync complete: ${syncResult.users} users, ${syncResult.offers} offers`,
+            );
+            // If counts changed, refresh the page filtering
+            if (syncResult.users !== localUsers.length || syncResult.offers !== localOffers.length) {
+              console.log(`${LOG_PREFIX} Sync changed data, refreshing page...`);
+              window.dispatchEvent(new CustomEvent('ave:refresh-page'));
+            }
+          })
+          .catch((syncError) => {
+            console.error(`${LOG_PREFIX} Bidirectional sync failed:`, syncError);
+          });
+        // Skip initial sync since we just ran it above
+        startPeriodicSync(true);
+      } else if (enabledSubs.length > 0) {
+        console.log(`${LOG_PREFIX} Found ${enabledSubs.length} enabled subscriptions, syncing in background...`);
+        syncSubscriptions()
+          .then((syncResult) => {
+            console.log(`${LOG_PREFIX} Subscription sync complete: ${syncResult.users} users, ${syncResult.offers} offers`);
+            // If counts changed, refresh the page filtering
+            if (syncResult.users !== localUsers.length || syncResult.offers !== localOffers.length) {
+              console.log(`${LOG_PREFIX} Sync changed data, refreshing page...`);
+              window.dispatchEvent(new CustomEvent('ave:refresh-page'));
+            }
+          })
+          .catch((syncError) => {
+            console.error(`${LOG_PREFIX} Subscription sync failed:`, syncError);
+          });
+        // Skip initial sync since we just ran it above
+        startPeriodicSync(true);
       }
     } catch (error) {
       console.error(`${LOG_PREFIX} Error initializing:`, error);
-    }
-
-    // Start platform init when DOM has enough content (or immediately if ready)
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => initPlatform());
-    } else {
-      await initPlatform();
     }
 
     // Listen for refresh events from periodic sync
