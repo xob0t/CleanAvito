@@ -1,7 +1,7 @@
 {
   "name": "clean-avito",
   "displayName": "CleanAvito",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Block unwanted sellers and listings on Avito",
   "type": "module",
   "scripts": {
